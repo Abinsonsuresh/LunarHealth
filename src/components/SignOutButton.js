@@ -8,5 +8,12 @@ export default function SignOutButton() {
     window.location.href = "/"
   }
 
-  return <button onClick={handleSignOut}>Sign out</button>
+  return (
+    <button
+      className="text-black p-4 bg-red-100 w-full"
+      onClick={handleSignOut}
+    >
+      Sign out
+    </button>
+  )
 }
