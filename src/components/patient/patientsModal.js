@@ -143,29 +143,33 @@ export default function PatientModal({
         className="w-full h-full max-w-4xl bg-white rounded-lg shadow-lg overflow-auto p-6 flex flex-col"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold text-[#213448]">
             {mode === "edit" ? "Edit Patient" : "Add Patient"}
           </h2>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1 rounded-md bg-gray-200"
+              className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448]"
             >
               Close
             </button>
           </div>
         </div>
 
-        {errorMsg && <div className="mb-4 text-red-600">{errorMsg}</div>}
+        {errorMsg && (
+          <div className="mb-4 text-red-600 bg-red-50 p-3 rounded-md">
+            {errorMsg}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
               Full name *
             </label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.full_name}
               onChange={(e) => updateForm("full_name", e.target.value)}
               required
@@ -173,11 +177,11 @@ export default function PatientModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
               Mobile phone *
             </label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.mobile_phone}
               onChange={(e) => updateForm("mobile_phone", e.target.value)}
               required
@@ -185,10 +189,12 @@ export default function PatientModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Age</label>
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
+              Age
+            </label>
             <input
               type="number"
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.age}
               onChange={(e) => updateForm("age", e.target.value)}
               min={0}
@@ -196,9 +202,11 @@ export default function PatientModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Gender</label>
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
+              Gender
+            </label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.gender}
               onChange={(e) => updateForm("gender", e.target.value)}
             >
@@ -210,28 +218,34 @@ export default function PatientModal({
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Condition</label>
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
+              Condition
+            </label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.condition}
               onChange={(e) => updateForm("condition", e.target.value)}
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Notes</label>
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
+              Notes
+            </label>
             <textarea
               rows={4}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.notes}
               onChange={(e) => updateForm("notes", e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">SMS status</label>
+            <label className="block text-sm font-medium mb-1 text-[#213448]">
+              SMS status
+            </label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
               value={form.status}
               onChange={(e) => updateForm("status", e.target.value)}
             >
@@ -247,14 +261,14 @@ export default function PatientModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-md bg-gray-200"
+            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 rounded-md bg-indigo-600 text-white font-medium"
+            className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving
               ? "Saving..."
@@ -266,8 +280,10 @@ export default function PatientModal({
 
         {/* QR shown AFTER add only (not on update) */}
         {mode !== "edit" && generatedId && qrCodeHtml && (
-          <div className="mt-8 border-t pt-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold mb-2">Patient QR Code</h3>
+          <div className="mt-8 border-t border-gray-200 pt-6 flex flex-col items-center">
+            <h3 className="text-lg font-semibold mb-2 text-[#213448]">
+              Patient QR Code
+            </h3>
             <p className="text-sm text-gray-500 mb-4">
               Scan to open patient profile
             </p>
@@ -275,10 +291,10 @@ export default function PatientModal({
             <img
               src={qrCodeHtml}
               alt="patient-qr"
-              className="w-48 h-48 border p-2 bg-white rounded"
+              className="w-48 h-48 border border-[#90AB8B] p-2 bg-white rounded"
             />
 
-            <div className="mt-2 font-mono text-sm">
+            <div className="mt-2 font-mono text-sm text-[#213448]">
               https://lunarhealth/patients/{generatedId}
             </div>
           </div>
