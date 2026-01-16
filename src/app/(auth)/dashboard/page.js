@@ -1,5 +1,8 @@
 // src/app/(auth)/dashboard/page.js
+
+import DashboardPatients from "@/components/pages/dashboardPatients"
 import SignOutButton from "@/components/SignOutButton"
+import Sidebar from "@/components/ui/sidebar"
 import { createServerSupabase } from "@/libs/supabase/supabaseServer"
 
 export default async function DashboardPage() {
@@ -13,12 +16,18 @@ export default async function DashboardPage() {
   // const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
 
   return (
-    <main style={{ padding: 20 }}>
-      <h1>Dashboard</h1>
-      <p>
-        Signed in as: <strong>{userEmail}</strong>
-      </p>
-      <SignOutButton />
-    </main>
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar userEmail={userEmail} />
+
+      {/* Main content */}
+      <main className="flex-1 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-[#213448]">Dashboard</h1>
+        </div>
+
+        <DashboardPatients />
+      </main>
+    </div>
   )
 }
