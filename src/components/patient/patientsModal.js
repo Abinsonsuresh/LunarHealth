@@ -4,6 +4,44 @@ import React, { useEffect, useState } from "react"
 import { generateQRCode } from "@/utils/qrCodeGenerator"
 import { supabase } from "@/utils/config"
 
+const dummyDoctors = [
+  {
+    id: "d1a2f3b4-1111-4aaa-8bbb-000000000001",
+    full_name: "Dr. Ananya Menon",
+    specialization: "General Medicine",
+  },
+  {
+    id: "d1a2f3b4-1111-4aaa-8bbb-000000000002",
+    full_name: "Dr. Rahul Nair",
+    specialization: "Cardiology",
+  },
+  {
+    id: "d1a2f3b4-1111-4aaa-8bbb-000000000003",
+    full_name: "Dr. Sneha Krishnan",
+    specialization: "Dermatology",
+  },
+  {
+    id: "d1a2f3b4-1111-4aaa-8bbb-000000000004",
+    full_name: "Dr. Arjun Pillai",
+    specialization: "Orthopedics",
+  },
+  {
+    id: "d1a2f3b4-1111-4aaa-8bbb-000000000005",
+    full_name: "Dr. Meera Thomas",
+    specialization: "Pediatrics",
+  },
+]
+
+/**
+ * PatientModal
+ *
+ * Props:
+ * - open: boolean
+ * - mode: "add" | "edit"
+ * - initialData: patient object when editing (must include `id`)
+ * - onClose: callback
+ * - onSaved: callback(data, { mode })
+ */
 export default function PatientModal({
   open,
   mode = "add",
@@ -11,72 +49,146 @@ export default function PatientModal({
   onClose,
   onSaved,
 }) {
+  // Patient-level form (demographics)
   const [form, setForm] = useState({
     full_name: "",
     age: "",
     gender: "",
+    mobile_phone: "",
+    status: "admitted",
+  })
+
+  // Visit form used for initial visit (on add) and add-visit in edit mode
+  const [visitForm, setVisitForm] = useState({
     condition: "",
     notes: "",
-    mobile_phone: "",
-    status: "not_sent",
-    public_token: "",
+    doctor_id: "",
+    diagnosis: "",
+    treatment: "",
+    prescriptions: "", // JSON array string e.g. ["A","B"]
+    status: "admitted",
   })
+
+  const [doctors, setDoctors] = useState(dummyDoctors)
+  const [visits, setVisits] = useState([])
+  const [visitsLoading, setVisitsLoading] = useState(false)
+
   const [saving, setSaving] = useState(false)
+  const [visitSaving, setVisitSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
+  const [visitError, setVisitError] = useState("")
+
+  // QR state (only used after add)
   const [generatedId, setGeneratedId] = useState("")
   const [qrCodeHtml, setQrCodeHtml] = useState("")
 
+  // Reset/populate form when modal opens or initialData changes
   useEffect(() => {
     if (initialData) {
       setForm((s) => ({ ...s, ...initialData }))
-      // ensure public_token if present
-      if (initialData.public_token) setGeneratedId(initialData.public_token)
-      else setGeneratedId("")
+      setGeneratedId(initialData.id || "")
       setQrCodeHtml("")
+      // clear visit form when editing
+      setVisitForm({
+        condition: "",
+        notes: "",
+        doctor_id: "",
+        diagnosis: "",
+        treatment: "",
+        prescriptions: "",
+        status: "admitted",
+      })
     } else {
       setForm({
         full_name: "",
         age: "",
         gender: "",
-        condition: "",
-        notes: "",
         mobile_phone: "",
         status: "admitted",
-        public_token: "",
       })
       setGeneratedId("")
       setQrCodeHtml("")
+      setVisitForm({
+        condition: "",
+        notes: "",
+        doctor_id: "",
+        diagnosis: "",
+        treatment: "",
+        prescriptions: "",
+        status: "admitted",
+      })
     }
   }, [initialData, open])
+
+  // Fetch doctors and visits (if edit) when modal opens
+  useEffect(() => {
+    if (!open) return
+    fetchDoctors()
+    if (mode === "edit" && initialData?.id) fetchVisits(initialData.id)
+  }, [open])
+
+  async function fetchDoctors() {
+    try {
+      const { data, error } = await supabase
+        .from("doctors")
+        .select("id, full_name")
+        .order("full_name", { ascending: true })
+      if (error) throw error
+      setDoctors(data || [])
+    } catch (err) {
+      console.error("fetchDoctors", err)
+    }
+  }
+
+  async function fetchVisits(patientId) {
+    try {
+      setVisitsLoading(true)
+      const { data, error } = await supabase
+        .from("patient_visits")
+        .select(
+          "id, visited_at, condition, notes, diagnosis, treatment, prescriptions, doctor_id, created_at",
+        )
+        .eq("patient_id", patientId)
+        .order("visited_at", { ascending: false })
+      if (error) throw error
+      setVisits(data || [])
+    } catch (err) {
+      console.error("fetchVisits", err)
+    } finally {
+      setVisitsLoading(false)
+    }
+  }
 
   function updateForm(key, value) {
     setForm((s) => ({ ...s, [key]: value }))
   }
 
+  function updateVisitForm(key, value) {
+    setVisitForm((s) => ({ ...s, [key]: value }))
+  }
+
+  // Save patient: if add -> create patient + create initial visit + generate QR
+  // if edit -> update patient (no QR)
   async function savePatient(e) {
-    e.preventDefault()
+    e && e.preventDefault()
     setErrorMsg("")
 
     if (!form.full_name || !form.mobile_phone) {
-      setErrorMsg("Please provide at least full name and mobile phone.")
+      setErrorMsg("Please provide full name and mobile phone.")
       return
     }
 
     setSaving(true)
-
     try {
       if (mode === "edit" && initialData?.id) {
-        // update flow
         const { data, error } = await supabase
           .from("patients")
           .update({
             full_name: form.full_name,
             age: form.age ? parseInt(form.age, 10) : null,
             gender: form.gender || null,
-            condition: form.condition || null,
-            notes: form.notes || null,
             mobile_phone: form.mobile_phone,
-            status: form.status || "not_sent",
+            status: form.status || "admitted",
           })
           .eq("id", initialData.id)
           .select()
@@ -84,57 +196,175 @@ export default function PatientModal({
 
         if (error) throw error
 
-        // inform parent and close modal (no QR for update)
         onSaved?.(data, { mode: "edit" })
         onClose?.()
       } else {
-        // add flow
+        // create patient
         const toInsert = {
           full_name: form.full_name,
           age: form.age ? parseInt(form.age, 10) : null,
           gender: form.gender || null,
-          condition: form.condition || null,
-          notes: form.notes || null,
           mobile_phone: form.mobile_phone,
-          status: form.status || "not_sent",
+          status: form.status || "admitted",
         }
 
         const { data, error } = await supabase
           .from("patients")
           .insert([toInsert])
           .select(
-            "id, full_name, age, gender, condition, notes, mobile_phone, status, created_at, updated_at",
+            "id, full_name, age, gender, mobile_phone, status, created_at, updated_at",
           )
           .single()
 
         if (error) throw error
-
-        // Use DB id as canonical id and public_token
         const patientId = data.id
         setGeneratedId(patientId)
 
+        // create initial visit using visitForm
+        let parsedPrescriptions = null
+        if (visitForm.prescriptions && visitForm.prescriptions.trim() !== "") {
+          try {
+            parsedPrescriptions = JSON.parse(visitForm.prescriptions)
+          } catch (err) {
+            // if prescriptions invalid JSON, continue but do not block patient creation
+            console.warn("Invalid prescriptions JSON for initial visit:", err)
+            parsedPrescriptions = null
+          }
+        }
+
+        const visitPayload = {
+          patient_id: patientId,
+          condition: visitForm.condition || null,
+          notes: visitForm.notes || null,
+          doctor_id: visitForm.doctor_id || null,
+          diagnosis: visitForm.diagnosis || null,
+          treatment: visitForm.treatment || null,
+          prescriptions: parsedPrescriptions,
+          status: form.status || "admitted",
+        }
+
+        const { data: visitData, error: visitError } = await supabase
+          .from("patient_visits")
+          .insert([visitPayload])
+          .select(
+            "id, visited_at, condition, notes, diagnosis, treatment, prescriptions, doctor_id",
+          )
+          .single()
+
+        if (visitError) {
+          // not fatal for patient creation, but notify in console
+          console.error("Initial visit creation failed:", visitError)
+        } else {
+          // load visits so the modal in add mode can show the initial visit if desired
+          setVisits([visitData, ...visits])
+        }
+
         // Generate QR for the patient URL
         const patientUrl = `https://lunarhealth/patients/${patientId}`
-        const qrImage = await generateQRCode(patientUrl, {
-          width: 256,
-          margin: 4,
-          color: { dark: "#000000ff", light: "#ffffffff" },
-        })
+        try {
+          const qrImage = await generateQRCode(patientUrl, {
+            width: 256,
+            margin: 4,
+            color: { dark: "#000000ff", light: "#ffffffff" },
+          })
+          setQrCodeHtml(qrImage)
+        } catch (qrErr) {
+          console.error("QR generation failed", qrErr)
+        }
 
-        setQrCodeHtml(qrImage)
-
-        // inform parent (so list can refresh) but keep modal open to show QR
         onSaved?.(data, { mode: "add" })
+        // keep modal open so user can see QR after add
       }
     } catch (err) {
-      console.error(err)
+      console.error("savePatient", err)
       setErrorMsg("Failed to save patient. See console for details.")
     } finally {
       setSaving(false)
     }
   }
 
+  // Add a visit (used in edit mode, and can also be used to add more in add-mode)
+  async function saveVisit(e) {
+    e && e.preventDefault()
+    setVisitError("")
+
+    // require patient id for saving visits
+    const patientId = mode === "edit" ? initialData?.id : generatedId
+    if (!patientId) {
+      setVisitError("Patient ID missing. Save patient first.")
+      return
+    }
+
+    if (!visitForm.condition && !visitForm.notes) {
+      setVisitError("Please provide at least condition or notes for the visit.")
+      return
+    }
+
+    setVisitSaving(true)
+    try {
+      let parsedPrescriptions = null
+      if (visitForm.prescriptions && visitForm.prescriptions.trim() !== "") {
+        try {
+          parsedPrescriptions = JSON.parse(visitForm.prescriptions)
+        } catch (err) {
+          setVisitError("Prescriptions must be a valid JSON array string.")
+          setVisitSaving(false)
+          return
+        }
+      }
+
+      const toInsert = {
+        patient_id: patientId,
+        condition: visitForm.condition || null,
+        notes: visitForm.notes || null,
+        doctor_id: visitForm.doctor_id || null,
+        diagnosis: visitForm.diagnosis || null,
+        treatment: visitForm.treatment || null,
+        prescriptions: parsedPrescriptions,
+      }
+
+      const { data, error } = await supabase
+        .from("patient_visits")
+        .insert([toInsert])
+        .select(
+          "id, visited_at, condition, notes, diagnosis, treatment, prescriptions, doctor_id",
+        )
+        .single()
+
+      if (error) throw error
+
+      // refresh visits list (for edit mode)
+      if (mode === "edit" && initialData?.id) {
+        fetchVisits(initialData.id)
+      } else {
+        // in add mode, prepend
+        setVisits((v) => [data, ...v])
+      }
+
+      // clear visit form
+      setVisitForm({
+        condition: "",
+        notes: "",
+        doctor_id: "",
+        diagnosis: "",
+        treatment: "",
+        prescriptions: "",
+      })
+    } catch (err) {
+      console.error("saveVisit", err)
+      setVisitError("Failed to save visit. See console for details.")
+    } finally {
+      setVisitSaving(false)
+    }
+  }
+
   if (!open) return null
+
+  // helper to get doctor name by id
+  function doctorNameById(id) {
+    const doc = doctors.find((d) => d.id === id)
+    return doc ? doc.full_name : "—"
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-6">
@@ -163,6 +393,7 @@ export default function PatientModal({
           </div>
         )}
 
+        {/* Patient form */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-[#213448]">
@@ -216,48 +447,111 @@ export default function PatientModal({
               <option value="other">Other</option>
             </select>
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1 text-[#213448]">
-              Condition
-            </label>
-            <input
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
-              value={form.condition}
-              onChange={(e) => updateForm("condition", e.target.value)}
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1 text-[#213448]">
-              Notes
-            </label>
-            <textarea
-              rows={4}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
-              value={form.notes}
-              onChange={(e) => updateForm("notes", e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1 text-[#213448]">
-              SMS status
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
-              value={form.status}
-              onChange={(e) => updateForm("status", e.target.value)}
-            >
-              <option value="not_sent">not_sent</option>
-              <option value="pending">pending</option>
-              <option value="sent">sent</option>
-              <option value="failed">failed</option>
-            </select>
-          </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-3">
+        {/* Visit inputs (these will be used to create the initial visit when adding a patient) */}
+        <div className="mt-6 border-t border-gray-100 pt-4">
+          <h3 className="text-md font-semibold mb-3 text-[#213448]">
+            Visit (initial or new)
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Doctor
+              </label>
+              <select
+                value={visitForm.doctor_id}
+                onChange={(e) => updateVisitForm("doctor_id", e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="">Select doctor</option>
+                {doctors.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Diagnosis
+              </label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={visitForm.diagnosis}
+                onChange={(e) => updateVisitForm("diagnosis", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Treatment
+              </label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={visitForm.treatment}
+                onChange={(e) => updateVisitForm("treatment", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Prescriptions (JSON array)
+              </label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={visitForm.prescriptions}
+                onChange={(e) =>
+                  updateVisitForm("prescriptions", e.target.value)
+                }
+                placeholder='e.g. ["Paracetamol 500mg","Amoxicillin 250mg"]'
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Condition
+              </label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={visitForm.condition}
+                onChange={(e) => updateVisitForm("condition", e.target.value)}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1 text-[#213448]">
+                Notes
+              </label>
+              <textarea
+                rows={3}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                value={visitForm.notes}
+                onChange={(e) => updateVisitForm("notes", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* When adding a patient we don't show a separate "Add visit" button here because the initial visit will be created when the patient is saved.
+              But in edit mode we allow adding visits individually. */}
+          {mode === "edit" && (
+            <div className="flex items-center justify-end gap-3 mb-4">
+              <div className="text-sm text-red-600">{visitError}</div>
+              <button
+                type="button"
+                onClick={saveVisit}
+                disabled={visitSaving}
+                className="px-4 py-2 rounded-md bg-[#213448] text-white"
+              >
+                {visitSaving ? "Saving..." : "Add Visit"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
@@ -277,6 +571,92 @@ export default function PatientModal({
                 : "Save patient"}
           </button>
         </div>
+
+        {/* Visits list only in edit mode or after add (we populate visits after add) */}
+        {(mode === "edit" || (mode !== "edit" && visits.length > 0)) && (
+          <div className="mt-8 border-t border-gray-100 pt-6">
+            <h3 className="text-lg font-semibold mb-4 text-[#213448]">
+              Visits
+            </h3>
+
+            {visitsLoading ? (
+              <div className="text-sm text-[#213448]/70">Loading visits...</div>
+            ) : visits.length === 0 ? (
+              <div className="text-sm text-[#213448]/70">
+                No visits yet for this patient.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {visits.map((v) => (
+                  <div
+                    key={v.id}
+                    className="bg-white border rounded-lg p-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium text-[#213448]">
+                        {v.visited_at
+                          ? new Date(v.visited_at).toLocaleString()
+                          : v.created_at
+                            ? new Date(v.created_at).toLocaleString()
+                            : ""}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {v.id?.slice(0, 8)}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-[#213448]/90 mb-2">
+                      Condition:{" "}
+                      <span className="font-medium">{v.condition ?? "—"}</span>
+                    </div>
+                    <div className="text-sm text-[#213448]/80 mb-2">
+                      Notes: {v.notes ?? "—"}
+                    </div>
+
+                    {v.diagnosis && (
+                      <div className="text-sm mb-1">
+                        Diagnosis:{" "}
+                        <span className="font-medium">{v.diagnosis}</span>
+                      </div>
+                    )}
+                    {v.treatment && (
+                      <div className="text-sm mb-1">
+                        Treatment:{" "}
+                        <span className="font-medium">{v.treatment}</span>
+                      </div>
+                    )}
+
+                    {v.doctor_id && (
+                      <div className="text-sm text-[#213448]/80 mt-1">
+                        Doctor:{" "}
+                        <span className="font-medium">
+                          {doctorNameById(v.doctor_id)}
+                        </span>
+                      </div>
+                    )}
+
+                    {v.prescriptions && (
+                      <div className="mt-2 text-sm">
+                        <div className="text-xs text-gray-500">
+                          Prescriptions
+                        </div>
+                        <ul className="list-disc ml-5 mt-1 text-sm">
+                          {Array.isArray(v.prescriptions) ? (
+                            v.prescriptions.map((rx, i) => (
+                              <li key={i}>{rx}</li>
+                            ))
+                          ) : (
+                            <li>{JSON.stringify(v.prescriptions)}</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* QR shown AFTER add only (not on update) */}
         {mode !== "edit" && generatedId && qrCodeHtml && (
