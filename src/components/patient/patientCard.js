@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import {
   X,
   User,
@@ -8,8 +8,37 @@ import {
   FileText,
   Clock,
 } from "lucide-react"
+import { generateQRCode } from "@/utils/qrCodeGenerator"
 
 export default function PatientCardModal({ patient, open, onClose }) {
+  const [qrCodeHtml, setQrCodeHtml] = useState("")
+
+  useEffect(() => {
+    if (!open || !patient?.id) {
+      setQrCodeHtml("")
+      return
+    }
+
+    const generateQR = async () => {
+      try {
+        const url = `http://localhost:3000/patients/${patient.id}`
+        const qrImage = await generateQRCode(url, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: "#213448ff",
+            light: "#ffffffff",
+          },
+        })
+        setQrCodeHtml(qrImage)
+      } catch (error) {
+        console.error("Failed to generate QR code", error)
+      }
+    }
+
+    generateQR()
+  }, [patient, open])
+
   if (!open || !patient) return null
 
   return (
@@ -146,15 +175,25 @@ export default function PatientCardModal({ patient, open, onClose }) {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 bg-gray-50 border-t border-gray-100">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-3 bg-[#213448] text-white rounded-lg font-medium hover:bg-[#213448]/90 transition-colors"
-          >
-            Close
-          </button>
-        </div>
+        {/* QR Code Section */}
+        {qrCodeHtml && (
+          <div className="p-6 border-t border-gray-100 flex flex-col items-center">
+            <h3 className="text-sm font-semibold text-[#213448]/60 uppercase tracking-wide mb-4">
+              Patient QR Code
+            </h3>
+            <img
+              src={qrCodeHtml}
+              alt="patient-qr"
+              className="w-40 h-40 border-2 border-[#90AB8B] p-2 bg-white rounded-lg"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              Scan to view full profile
+            </p>
+            <div className="mt-2 font-mono text-xs text-[#213448]">
+              http://localhost:3000/patients/{patient.id}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
