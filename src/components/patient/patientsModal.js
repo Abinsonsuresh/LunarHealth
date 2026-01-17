@@ -605,7 +605,7 @@ export default function PatientModal({
         </div>
 
         {/* Visits list only in edit mode or after add (we populate visits after add) */}
-        {(mode === "edit" || (mode !== "edit" && visits.length > 0)) && (
+        {/* {(mode === "edit" || (mode !== "edit" && visits.length > 0)) && (
           <div className="mt-8 border-t border-gray-100 pt-6">
             <h3 className="text-lg font-semibold mb-4 text-[#213448]">
               Visits
@@ -688,7 +688,7 @@ export default function PatientModal({
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* QR shown AFTER add only (not on update) */}
         {mode !== "edit" && generatedId && qrCodeHtml && (
