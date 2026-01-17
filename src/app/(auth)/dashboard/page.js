@@ -2,6 +2,7 @@
 
 import DashboardAdmin from "@/components/pages/dashboardAdmin"
 import DashboardPatients from "@/components/pages/dashboardPatients"
+import PatientDetailsPage from "@/components/pages/patientDetailsPage"
 import SignOutButton from "@/components/SignOutButton"
 import Sidebar from "@/components/ui/sidebar"
 import { createServerSupabase } from "@/libs/supabase/supabaseServer"
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("full_name, role, email")
+    .select("full_name, role, email,mob_num,id")
     .eq("id", userId)
     .single()
 
@@ -44,6 +45,12 @@ export default async function DashboardPage() {
         {profile?.role === "super_admin" && <DashboardAdmin />}
         {profile?.role === "attender" && <DashboardPatients />}
         {profile?.role === "doctor" && <DashboardPatients />}
+        {profile?.role === "patient" && (
+          <PatientDetailsPage
+            profile={profile && profile}
+            patientNumber={profile && profile?.phone}
+          />
+        )}
       </main>
     </div>
   )
