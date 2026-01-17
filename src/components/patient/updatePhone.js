@@ -119,8 +119,7 @@ export default function UpdatePhoneModal({
         </h3>
 
         <p className="text-sm text-gray-600 mb-4">
-          Update your profile phone (mob_num). We&apos;ll also try to update
-          your signed-in auth user phone.
+          Update your profile phone number.
         </p>
 
         <label className="block text-sm font-medium text-[#213448] mb-1">
@@ -131,7 +130,7 @@ export default function UpdatePhoneModal({
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+919876543210"
-          className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-[#90AB8B]"
+          className="w-full border text-black border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-[#90AB8B]"
           required
         />
 
@@ -146,7 +145,7 @@ export default function UpdatePhoneModal({
               setMsg("")
               onClose?.()
             }}
-            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+            className="px-4 py-2 text-black rounded bg-gray-200 hover:bg-gray-300"
             disabled={saving}
           >
             Cancel
