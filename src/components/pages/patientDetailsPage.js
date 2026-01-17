@@ -171,9 +171,11 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
   async function fetchDoctors() {
     try {
       const { data, error } = await supabase
-        .from("doctors")
+        .from("profiles")
         .select("id, full_name")
+        .eq("role", "doctor")
         .order("full_name", { ascending: true })
+
       if (error) throw error
       setDoctors(data || [])
     } catch (err) {
