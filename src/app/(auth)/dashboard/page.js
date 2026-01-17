@@ -11,7 +11,6 @@ export default async function DashboardPage() {
   const supabase = createServerSupabase()
   const { data } = await supabase.auth.getSession()
   const session = data?.session
-
   const userEmail = session?.user?.email ?? "Unknown"
   const userId = session.user.id
 
@@ -28,18 +27,17 @@ export default async function DashboardPage() {
 
   console.log(profile)
 
-  // Example server-side query using RLS (optional)
-  // const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
       <Sidebar profile={profile} userEmail={userEmail} />
 
       {/* Main content */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-[#213448]">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-[#213448] md:ml-0 ml-12">
+            Dashboard
+          </h1>
         </div>
 
         {profile?.role === "super_admin" && <DashboardAdmin />}
