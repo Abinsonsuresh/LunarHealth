@@ -1,7 +1,7 @@
 import { createServerSupabase } from "@/libs/supabase/supabaseServer"
 import PatientDetails from "@/components/patient/patientDetails"
 
-async function PatientPage({ params }) {
+const PatientPage = async ({ params }) => {
   const { id } = await params
 
   const supabase = await createServerSupabase()
@@ -27,9 +27,32 @@ async function PatientPage({ params }) {
     )
   }
 
+  // Fetch visits for this patient
+  const { data: visits, error: visitsError } = await supabase
+    .from("patient_visits")
+    .select(
+      "id, visited_at, condition, notes, diagnosis, treatment, prescriptions, doctor_id, created_at",
+    )
+    .eq("patient_id", id)
+    .order("visited_at", { ascending: false })
+
+  const visitsData = visitsError ? [] : visits || []
+
+  // Fetch doctors with role "doctor" from profiles table
+  const { data: doctors, error: doctorsError } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("role", "doctor")
+
+  const doctorsData = doctorsError ? [] : doctors || []
+
   return (
     <div className="py-8">
-      <PatientDetails patient={patient} />
+      <PatientDetails
+        patient={patient}
+        visits={visitsData}
+        doctors={doctorsData}
+      />
     </div>
   )
 }

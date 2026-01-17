@@ -1,35 +1,31 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+import Select from "react-select"
 import { generateQRCode } from "@/utils/qrCodeGenerator"
 import { supabase } from "@/utils/config"
 
-const dummyDoctors = [
-  {
-    id: "d1a2f3b4-1111-4aaa-8bbb-000000000001",
-    full_name: "Dr. Ananya Menon",
-    specialization: "General Medicine",
-  },
-  {
-    id: "d1a2f3b4-1111-4aaa-8bbb-000000000002",
-    full_name: "Dr. Rahul Nair",
-    specialization: "Cardiology",
-  },
-  {
-    id: "d1a2f3b4-1111-4aaa-8bbb-000000000003",
-    full_name: "Dr. Sneha Krishnan",
-    specialization: "Dermatology",
-  },
-  {
-    id: "d1a2f3b4-1111-4aaa-8bbb-000000000004",
-    full_name: "Dr. Arjun Pillai",
-    specialization: "Orthopedics",
-  },
-  {
-    id: "d1a2f3b4-1111-4aaa-8bbb-000000000005",
-    full_name: "Dr. Meera Thomas",
-    specialization: "Pediatrics",
-  },
+const medicineOptions = [
+  { value: "Paracetamol 500mg", label: "Paracetamol 500mg" },
+  { value: "Ibuprofen 400mg", label: "Ibuprofen 400mg" },
+  { value: "Amoxicillin 250mg", label: "Amoxicillin 250mg" },
+  { value: "Amoxicillin 500mg", label: "Amoxicillin 500mg" },
+  { value: "Aspirin 100mg", label: "Aspirin 100mg" },
+  { value: "Aspirin 500mg", label: "Aspirin 500mg" },
+  { value: "Metformin 500mg", label: "Metformin 500mg" },
+  { value: "Metformin 1000mg", label: "Metformin 1000mg" },
+  { value: "Lisinopril 10mg", label: "Lisinopril 10mg" },
+  { value: "Atorvastatin 20mg", label: "Atorvastatin 20mg" },
+  { value: "Omeprazole 20mg", label: "Omeprazole 20mg" },
+  { value: "Loratadine 10mg", label: "Loratadine 10mg" },
+  { value: "Cetirizine 10mg", label: "Cetirizine 10mg" },
+  { value: "Ciprofloxacin 500mg", label: "Ciprofloxacin 500mg" },
+  { value: "Doxycycline 100mg", label: "Doxycycline 100mg" },
+  { value: "Cephalexin 500mg", label: "Cephalexin 500mg" },
+  { value: "Azithromycin 500mg", label: "Azithromycin 500mg" },
+  { value: "Metronidazole 400mg", label: "Metronidazole 400mg" },
+  { value: "Diclofenac 50mg", label: "Diclofenac 50mg" },
+  { value: "Ranitidine 150mg", label: "Ranitidine 150mg" },
 ]
 
 /**
@@ -65,11 +61,11 @@ export default function PatientModal({
     doctor_id: "",
     diagnosis: "",
     treatment: "",
-    prescriptions: "", // JSON array string e.g. ["A","B"]
+    prescriptions: [],
     status: "admitted",
   })
 
-  const [doctors, setDoctors] = useState(dummyDoctors)
+  const [doctors, setDoctors] = useState([])
   const [visits, setVisits] = useState([])
   const [visitsLoading, setVisitsLoading] = useState(false)
 
@@ -95,7 +91,7 @@ export default function PatientModal({
         doctor_id: "",
         diagnosis: "",
         treatment: "",
-        prescriptions: "",
+        prescriptions: [],
         status: "admitted",
       })
     } else {
@@ -114,7 +110,7 @@ export default function PatientModal({
         doctor_id: "",
         diagnosis: "",
         treatment: "",
-        prescriptions: "",
+        prescriptions: [],
         status: "admitted",
       })
     }
@@ -130,8 +126,9 @@ export default function PatientModal({
   async function fetchDoctors() {
     try {
       const { data, error } = await supabase
-        .from("doctors")
+        .from("profiles")
         .select("id, full_name")
+        .eq("role", "doctor")
         .order("full_name", { ascending: true })
       if (error) throw error
       setDoctors(data || [])
@@ -221,16 +218,10 @@ export default function PatientModal({
         setGeneratedId(patientId)
 
         // create initial visit using visitForm
-        let parsedPrescriptions = null
-        if (visitForm.prescriptions && visitForm.prescriptions.trim() !== "") {
-          try {
-            parsedPrescriptions = JSON.parse(visitForm.prescriptions)
-          } catch (err) {
-            // if prescriptions invalid JSON, continue but do not block patient creation
-            console.warn("Invalid prescriptions JSON for initial visit:", err)
-            parsedPrescriptions = null
-          }
-        }
+        const parsedPrescriptions =
+          visitForm.prescriptions && visitForm.prescriptions.length > 0
+            ? visitForm.prescriptions.map((p) => p.value)
+            : null
 
         const visitPayload = {
           patient_id: patientId,
@@ -302,16 +293,10 @@ export default function PatientModal({
 
     setVisitSaving(true)
     try {
-      let parsedPrescriptions = null
-      if (visitForm.prescriptions && visitForm.prescriptions.trim() !== "") {
-        try {
-          parsedPrescriptions = JSON.parse(visitForm.prescriptions)
-        } catch (err) {
-          setVisitError("Prescriptions must be a valid JSON array string.")
-          setVisitSaving(false)
-          return
-        }
-      }
+      const parsedPrescriptions =
+        visitForm.prescriptions && visitForm.prescriptions.length > 0
+          ? visitForm.prescriptions.map((p) => p.value)
+          : null
 
       const toInsert = {
         patient_id: patientId,
@@ -348,7 +333,7 @@ export default function PatientModal({
         doctor_id: "",
         diagnosis: "",
         treatment: "",
-        prescriptions: "",
+        prescriptions: [],
       })
     } catch (err) {
       console.error("saveVisit", err)
@@ -496,17 +481,64 @@ export default function PatientModal({
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1 text-[#213448]">
-                Prescriptions (JSON array)
+                Prescriptions
               </label>
-              <input
-                className="w-full border border-gray-300 rounded px-3 py-2"
+              <Select
+                isMulti
+                options={medicineOptions}
                 value={visitForm.prescriptions}
-                onChange={(e) =>
-                  updateVisitForm("prescriptions", e.target.value)
+                onChange={(selected) =>
+                  updateVisitForm("prescriptions", selected || [])
                 }
-                placeholder='e.g. ["Paracetamol 500mg","Amoxicillin 250mg"]'
+                onCreateOption={(inputValue) => {
+                  const newOption = { value: inputValue, label: inputValue }
+                  updateVisitForm("prescriptions", [
+                    ...visitForm.prescriptions,
+                    newOption,
+                  ])
+                }}
+                isClearable
+                isCreatable
+                placeholder="Select or type to add medicines..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderColor: "#d1d5db",
+                    borderRadius: "6px",
+                    "&:hover": {
+                      borderColor: "#9ca3af",
+                    },
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected
+                      ? "#90AB8B"
+                      : state.isFocused
+                        ? "#EBF4DD"
+                        : "white",
+                    color: state.isSelected ? "white" : "#213448",
+                  }),
+                  multiValue: (base) => ({
+                    ...base,
+                    backgroundColor: "#EBF4DD",
+                  }),
+                  multiValueLabel: (base) => ({
+                    ...base,
+                    color: "#213448",
+                  }),
+                  multiValueRemove: (base) => ({
+                    ...base,
+                    color: "#90AB8B",
+                    "&:hover": {
+                      backgroundColor: "#90AB8B",
+                      color: "white",
+                    },
+                  }),
+                }}
               />
             </div>
 
