@@ -42,7 +42,8 @@ export default async function DashboardPage() {
         </div>
 
         {profile?.role === "super_admin" && <DashboardAdmin />}
-        {profile?.role === "user" && <DashboardPatients />}
+        {profile?.role === "attender" && <DashboardPatients />}
+        {profile?.role === "doctor" && <DashboardPatients />}
       </main>
     </div>
   )

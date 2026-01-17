@@ -133,7 +133,7 @@ export default function UserModal({ open, onClose, onSaved }) {
               <option value="user">user</option>
               <option value="admin">admin</option>
               <option value="doctor">doctor</option>
-              <option value="nurse">attender</option>
+              <option value="attender">attender</option>
               <option value="receptionist">receptionist</option>
             </select>
           </div>
