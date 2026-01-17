@@ -41,9 +41,11 @@ const medicineOptions = [
 export default function PatientModal({
   open,
   mode = "add",
+  enableSearch = false,
   initialData = null,
   onClose,
   onSaved,
+  onPatientSelect,
 }) {
   // Patient-level form (demographics)
   const [form, setForm] = useState({
@@ -78,6 +80,67 @@ export default function PatientModal({
   const [generatedId, setGeneratedId] = useState("")
   const [qrCodeHtml, setQrCodeHtml] = useState("")
 
+  // Search state
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [debouncedName, setDebouncedName] = useState("")
+  const [debouncedMobile, setDebouncedMobile] = useState("")
+
+  // Debounce logic
+  useEffect(() => {
+    if (!enableSearch || mode !== "add") return
+
+    const handler = setTimeout(() => {
+      setDebouncedName(form.full_name)
+      setDebouncedMobile(form.mobile_phone)
+    }, 3000)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [form.full_name, form.mobile_phone, enableSearch, mode])
+
+  // Search execution
+  useEffect(() => {
+    if (!enableSearch || mode !== "add") {
+      setSearchResults([])
+      return
+    }
+
+    if (debouncedName || debouncedMobile) {
+      performSearch()
+    } else {
+      setSearchResults([])
+    }
+  }, [debouncedName, debouncedMobile, enableSearch, mode])
+
+  async function performSearch() {
+    setIsSearching(true)
+    try {
+      let query = supabase.from("patients").select("*")
+      let conditions = []
+
+      if (debouncedName) {
+        conditions.push(`full_name.ilike.%${debouncedName}%`)
+      }
+      if (debouncedMobile) {
+        conditions.push(`mobile_phone.ilike.%${debouncedMobile}%`)
+      }
+
+      if (conditions.length > 0) {
+        query = query.or(conditions.join(","))
+      }
+
+      const { data, error } = await query.limit(5)
+      if (error) throw error
+      setSearchResults(data || [])
+    } catch (err) {
+      console.error("Search failed", err)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   // Reset/populate form when modal opens or initialData changes
   useEffect(() => {
     if (initialData) {
@@ -104,6 +167,7 @@ export default function PatientModal({
       })
       setGeneratedId("")
       setQrCodeHtml("")
+      setSearchResults([]) // clear search results on new open
       setVisitForm({
         condition: "",
         notes: "",
@@ -196,6 +260,21 @@ export default function PatientModal({
         onSaved?.(data, { mode: "edit" })
         onClose?.()
       } else {
+        // Check if mobile number already exists
+        const { data: existingPatients, error: checkError } = await supabase
+          .from("patients")
+          .select("id")
+          .eq("mobile_phone", form.mobile_phone)
+          .limit(1)
+
+        if (checkError) throw checkError
+
+        if (existingPatients && existingPatients.length > 0) {
+          setErrorMsg("A patient with this mobile number already exists.")
+          setSaving(false)
+          return
+        }
+
         // create patient
         const toInsert = {
           full_name: form.full_name,
@@ -417,7 +496,36 @@ export default function PatientModal({
             )}
 
             {/* Patient form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+              {/* Search results overlay */}
+              {mode === "add" && enableSearch && searchResults.length > 0 && (
+                <div className="absolute top-20 left-0 right-0 z-10 bg-white border border-[#90AB8B] rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                  <div className="p-2 bg-[#EBF4DD] text-xs font-semibold text-[#213448] uppercase tracking-wider">
+                    Found Existing Patients ({searchResults.length})
+                  </div>
+                  {searchResults.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => onPatientSelect && onPatientSelect(p)}
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors flex justify-between items-center group"
+                    >
+                      <div>
+                        <div className="font-medium text-[#213448]">
+                          {p.full_name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {p.age} yrs • {p.gender} • {p.mobile_phone}
+                        </div>
+                      </div>
+                      <div className="text-xs bg-[#213448] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        Select
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium mb-1 text-[#213448]">
                   Full name *
@@ -426,8 +534,16 @@ export default function PatientModal({
                   className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
                   value={form.full_name}
                   onChange={(e) => updateForm("full_name", e.target.value)}
+                  placeholder={
+                    enableSearch && mode === "add" ? "Type to search..." : ""
+                  }
                   required
                 />
+                {isSearching && (
+                  <div className="text-xs text-[#90AB8B] mt-1">
+                    Searching...
+                  </div>
+                )}
               </div>
 
               <div>
@@ -438,6 +554,9 @@ export default function PatientModal({
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
                   value={form.mobile_phone}
                   onChange={(e) => updateForm("mobile_phone", e.target.value)}
+                  placeholder={
+                    enableSearch && mode === "add" ? "Type to search..." : ""
+                  }
                   required
                 />
               </div>
@@ -472,8 +591,48 @@ export default function PatientModal({
               </div>
             </div>
 
+            {(() => {
+              const isDataChanged =
+                mode === "edit" &&
+                initialData &&
+                (form.full_name !== initialData.full_name ||
+                  form.mobile_phone !== (initialData.mobile_phone || "") ||
+                  (form.age ? parseInt(form.age, 10) : null) !==
+                    (initialData.age ? parseInt(initialData.age, 10) : null) ||
+                  (form.gender || "") !== (initialData.gender || ""))
+
+              const isSubmitDisabled =
+                saving ||
+                (mode === "edit"
+                  ? !isDataChanged
+                  : !form.full_name || !form.mobile_phone)
+
+              return (
+                <div className="mt-4 flex items-center justify-end gap-3 pb-6">
+                  {/* <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
+                  >
+                    Cancel
+                  </button> */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitDisabled}
+                    className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving
+                      ? "Saving..."
+                      : mode === "edit"
+                        ? "Update patient"
+                        : "Save patient"}
+                  </button>
+                </div>
+              )
+            })()}
+
             {/* Visit inputs */}
-            <div className="mt-6 border-t border-gray-100 pt-4">
+            <div className="mt-0 border-t border-gray-100 pt-4">
               <h3 className="text-md font-semibold mb-3 text-[#213448]">
                 Visit (initial or new)
               </h3>
@@ -625,27 +784,6 @@ export default function PatientModal({
                   </button>
                 </div>
               )}
-            </div>
-
-            <div className="mt-4 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving
-                  ? "Saving..."
-                  : mode === "edit"
-                    ? "Update patient"
-                    : "Save patient"}
-              </button>
             </div>
           </form>
         )}
