@@ -18,6 +18,7 @@ import {
   UserCircle,
 } from "lucide-react"
 import axios from "axios"
+import { HealthAnalysisComponent } from "../patient/HealthAnalysisComponent"
 
 export default function PatientDetailsPage({ patientNumber, profile }) {
   const [profileState, setProfileState] = useState(profile || null)
@@ -434,67 +435,12 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
         )}
 
         {/* AI Analysis Section */}
-        {profileState?.role === "patient" && (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-[#90AB8B]/30">
-            <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <Activity className="w-6 h-6 animate-pulse" />
-                AI Health Analysis
-              </h3>
-              {loadingAiData && (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-              )}
-            </div>
-            <div className="p-6">
-              {loadingAiData ? (
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
-                </div>
-              ) : aiError ? (
-                <div className="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-lg">
-                  <Activity className="w-5 h-5 flex-shrink-0" />
-                  <p className="text-sm font-medium">
-                    Unable to connect to AI analysis assistant. Please try again
-                    later.
-                  </p>
-                </div>
-              ) : aiData ? (
-                <div className="prose prose-sm max-w-none text-[#213448]">
-                  <div className="grid grid-cols-1 gap-4">
-                    {typeof aiData === "object" ? (
-                      Object.entries(aiData).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="bg-gray-50 p-3 rounded-lg border border-gray-100"
-                        >
-                          <span className="text-xs font-bold uppercase text-[#90AB8B] block mb-1">
-                            {key.replace(/_/g, " ")}
-                          </span>
-                          <span className="text-[#213448]/80 text-sm">
-                            {typeof value === "object"
-                              ? JSON.stringify(value)
-                              : String(value)}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="whitespace-pre-wrap leading-relaxed">
-                        {String(aiData)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-[#213448]/60 italic">
-                  Complete your visits to receive personalized AI health
-                  insights.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
+        <HealthAnalysisComponent
+          aiData={aiData}
+          loadingAiData={loadingAiData}
+          aiError={aiError}
+        />
 
         {/* Visits Section */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
