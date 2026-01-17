@@ -17,6 +17,7 @@ import {
   Activity,
   UserCircle,
 } from "lucide-react"
+import axios from "axios"
 
 export default function PatientDetailsPage({ patientNumber, profile }) {
   const [profileState, setProfileState] = useState(profile || null)
@@ -150,30 +151,43 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
+  async function fetchAiData(patientId) {
+    if (!patientId) return
+
+    try {
+      setLoadingAiData(true)
+      setAiError(null)
+
+      const response = await axios.post(
+        "http://localhost:5001/api/v1/patient",
+        {
+          patient_id: patientId, // ✅ DIRECT BODY
+        },
+      )
+
+      setAiData(response.data?.data)
+    } catch (err) {
+      console.error("fetchAiData", err)
+
+      if (axios.isAxiosError(err)) {
+        setAiError(
+          err.response?.data?.message ||
+            err.message ||
+            "Backend not responding",
+        )
+      } else {
+        setAiError("Something went wrong")
+      }
+    } finally {
+      setLoadingAiData(false)
+    }
+  }
+
   useEffect(() => {
     if (patient?.id) {
       fetchAiData(patient.id)
     }
   }, [patient])
-
-  async function fetchAiData(patientId) {
-    if (!patientId) return
-    try {
-      setLoadingAiData(true)
-      setAiError(null)
-      const res = await fetch(
-        `http://localhost:5001/api/v1/patient?patient_id=${patientId}`,
-      )
-      if (!res.ok) throw new Error("Backend not responding")
-      const data = await res.json()
-      setAiData(data)
-    } catch (err) {
-      console.error("fetchAiData", err)
-      setAiError(err.message)
-    } finally {
-      setLoadingAiData(false)
-    }
-  }
 
   async function fetchVisits(patientId) {
     try {
