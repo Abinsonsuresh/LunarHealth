@@ -1,17 +1,23 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import PatientModal from "../patient/patientsModal" // keep path if correct
-import UpdatePhoneModal from "../patient/updatePhone" // keep path if correct
+import PatientModal from "../patient/patientsModal"
+import UpdatePhoneModal from "../patient/updatePhone"
 import { supabase } from "@/utils/config"
-import { Edit3, Phone, User } from "lucide-react"
+import {
+  Edit3,
+  Phone,
+  User,
+  Calendar,
+  FileText,
+  Stethoscope,
+  Pill,
+  ChevronDown,
+  ChevronUp,
+  Activity,
+  UserCircle,
+} from "lucide-react"
 
-/**
- * PatientDetailsPage
- * Props:
- * - patientNumber (optional) : phone string to lookup patient by phone
- * - profile (optional) : preloaded profile row { id, mob_num, ... }
- */
 export default function PatientDetailsPage({ patientNumber, profile }) {
   const [profileState, setProfileState] = useState(profile || null)
   const [loadingProfile, setLoadingProfile] = useState(false)
@@ -22,15 +28,14 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
   const [visitsLoading, setVisitsLoading] = useState(false)
   const [doctors, setDoctors] = useState([])
   const [errorMsg, setErrorMsg] = useState("")
+  const [expandedVisits, setExpandedVisits] = useState({})
 
-  // separate modal states
   const [patientModalOpen, setPatientModalOpen] = useState(false)
   const [patientModalMode, setPatientModalMode] = useState("edit")
   const [patientModalInitial, setPatientModalInitial] = useState(null)
 
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
 
-  // If no profile prop is passed, try to load current profile
   useEffect(() => {
     if (!profile) {
       ;(async () => {
@@ -41,33 +46,26 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }, [profile])
 
-  // decide what to do when we have profileState or patientNumber
   useEffect(() => {
     ;(async () => {
-      // if explicit patientNumber given, always use it
       if (patientNumber) {
         await fetchPatientByPhone(patientNumber)
         return
       }
 
-      // no patientNumber supplied -> wait for profileState
       if (!profileState) {
         return
       }
 
-      // if profile exists but mob_num missing -> open only the phone modal
       if (!profileState.mob_num) {
         setPhoneModalOpen(true)
         return
       }
 
-      // profile has mob_num -> fetch patient by that number
       await fetchPatientByPhone(profileState.mob_num)
     })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileState, patientNumber])
 
-  // load current profile from 'profile' table using session user id (if available)
   async function loadCurrentProfile() {
     try {
       setLoadingProfile(true)
@@ -95,13 +93,11 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
-  // Normalize phone helper (strip spaces, leading + if you want)
   function normalizePhone(p) {
     if (!p) return p
     return p.toString().replace(/\s+/g, "").replace(/^\+/, "")
   }
 
-  // Fetch patient by phone — robust versus different columns (mobile_phone, mobile_num, mob_num)
   async function fetchPatientByPhone(rawPhone) {
     const phone = normalizePhone(rawPhone)
     if (!phone) {
@@ -113,11 +109,8 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     try {
       setLoadingPatient(true)
 
-      // supabase .or uses comma-separated conditions, match exact normalized value
-      // we will query the three likely columns: mobile_phone, mobile_num, mob_num
       const orQuery = `mobile_phone.eq.${phone},mobile_phone.eq.${phone},mobile_phone.eq.${phone}`
 
-      // get results (limit 1 to avoid array of duplicates); order by newest
       const res = await supabase
         .from("patients")
         .select("*")
@@ -133,7 +126,6 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
       if (Array.isArray(d)) {
         found = d.length > 0 ? d[0] : null
       } else if (d && typeof d === "object") {
-        // some SDK responses may return object for single record
         found = d
       }
 
@@ -155,7 +147,6 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
-  // Fetch visits using actual patient.id (table name patient_visits)
   async function fetchVisits(patientId) {
     try {
       setVisitsLoading(true)
@@ -191,7 +182,6 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
-  // Called when PatientModal saves (both add & edit)
   async function handlePatientModalSaved(data, meta) {
     if (data?.id) {
       setPatient(data)
@@ -202,46 +192,53 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
-  // Called when UpdatePhoneModal updates profile
   async function handleProfileUpdated(updatedProfile) {
-    // update local profile state
     if (updatedProfile) {
       setProfileState(updatedProfile)
-      // if phone now exists, fetch patient by that phone
       if (updatedProfile.mob_num) {
         await fetchPatientByPhone(updatedProfile.mob_num)
       }
     } else {
-      // reload profile from server if modal returned nothing
       await loadCurrentProfile()
     }
     setPhoneModalOpen(false)
   }
 
-  // helper to map doctor id -> name
   function doctorNameByIdLocal(id) {
     const doc = doctors.find((d) => d.id === id)
     return doc ? doc.full_name : "—"
   }
 
+  function toggleVisit(visitId) {
+    setExpandedVisits((prev) => ({
+      ...prev,
+      [visitId]: !prev[visitId],
+    }))
+  }
+
   const phoneToShow = patientNumber || profileState?.mob_num || "(no phone)"
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-[#213448] flex items-center gap-3">
-              <User className="w-6 h-6 text-[#90AB8B]" />
-              Patient Details
-            </h1>
-            <p className="text-sm text-[#213448]/70 mt-1">
-              Looking up by phone:{" "}
-              <span className="font-mono">{phoneToShow}</span>
-            </p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-5xl mx-auto p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-[#213448] flex items-center gap-3">
+                <div className="p-2 bg-[#90AB8B] rounded-lg">
+                  <User className="w-7 h-7 text-white" />
+                </div>
+                Patient Details
+              </h1>
+              <p className="text-sm text-[#213448]/60 mt-2 ml-14">
+                Phone:{" "}
+                <span className="font-mono font-medium text-[#213448]">
+                  {phoneToShow}
+                </span>
+              </p>
+            </div>
 
-          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setPatientModalMode(patient ? "edit" : "add")
@@ -252,197 +249,353 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
                 )
                 setPatientModalOpen(true)
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#EBF4DD] text-[#213448] hover:bg-[#90AB8B] hover:text-white transition"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#90AB8B] text-white hover:bg-[#7a9476] transition-all shadow-md hover:shadow-lg"
             >
               <Edit3 className="w-4 h-4" />
-              Edit
+              {patient ? "Edit Patient" : "Add Patient"}
             </button>
           </div>
         </div>
 
-        {/* Patient card */}
+        {/* Patient Card */}
         {loadingPatient ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            Loading patient...
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#90AB8B] border-t-transparent"></div>
+            <p className="mt-3 text-[#213448]/70">Loading patient...</p>
           </div>
         ) : patient ? (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex items-start gap-6">
-              <div className="w-20 h-20 rounded-full bg-[#90AB8B] text-white flex items-center justify-center text-2xl font-bold">
-                {patient.full_name ? patient.full_name.charAt(0) : "?"}
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-[#213448]">
-                    {patient.full_name}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] p-6">
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
+                  {patient.full_name
+                    ? patient.full_name.charAt(0).toUpperCase()
+                    : "?"}
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    {patient.full_name || "Unknown Patient"}
                   </h2>
-                  <div className="text-sm text-[#213448]/60 font-mono">
-                    {patient.id?.slice(0, 8)}
+                  <div className="flex items-center gap-2 text-white/80 text-sm">
+                    <UserCircle className="w-4 h-4" />
+                    <span className="font-mono">
+                      ID: {patient.id?.slice(0, 8)}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="inline-block px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-medium">
+                    {patient.status || "Active"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-[#EBF4DD] rounded-lg">
+                    <Calendar className="w-5 h-5 text-[#90AB8B]" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                      Age
+                    </div>
+                    <div className="text-lg font-semibold text-[#213448]">
+                      {patient.age || "—"} years
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-[#213448]/80">
-                  <div>
-                    <div className="text-xs text-[#213448]/60">Age</div>
-                    <div className="font-medium">{patient.age ?? "—"}</div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-[#EBF4DD] rounded-lg">
+                    <User className="w-5 h-5 text-[#90AB8B]" />
                   </div>
-
                   <div>
-                    <div className="text-xs text-[#213448]/60">Gender</div>
-                    <div className="font-medium">{patient.gender ?? "—"}</div>
+                    <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                      Gender
+                    </div>
+                    <div className="text-lg font-semibold text-[#213448]">
+                      {patient.gender || "—"}
+                    </div>
                   </div>
+                </div>
 
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-[#EBF4DD] rounded-lg">
+                    <Phone className="w-5 h-5 text-[#90AB8B]" />
+                  </div>
                   <div>
-                    <div className="text-xs text-[#213448]/60">Mobile</div>
-                    <div className="font-medium flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-[#90AB8B]" />
-                      {patient.mobile_phone ??
-                        patient.mobile_num ??
-                        patient.mob_num ??
+                    <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                      Mobile
+                    </div>
+                    <div className="text-lg font-semibold text-[#213448] font-mono">
+                      {patient.mobile_phone ||
+                        patient.mobile_num ||
+                        patient.mob_num ||
                         "—"}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-4 text-sm text-[#213448]/80">
-                  <div>
-                    <div className="text-xs text-[#213448]/60">Status</div>
-                    <div className="inline-block px-3 py-1 rounded-full bg-[#EBF4DD] text-[#90AB8B]">
-                      {patient.status ?? "—"}
-                    </div>
-                  </div>
-
+              {(patient.condition || patient.notes) && (
+                <div className="border-t pt-6 space-y-4">
                   {patient.condition && (
-                    <div className="mt-3">
-                      <div className="text-xs text-[#213448]/60">
-                        Condition (patient-level)
+                    <div className="flex items-start gap-3">
+                      <Activity className="w-5 h-5 text-[#90AB8B] mt-0.5" />
+                      <div className="flex-1">
+                        <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                          Current Condition
+                        </div>
+                        <div className="text-[#213448] font-medium">
+                          {patient.condition}
+                        </div>
                       </div>
-                      <div className="font-medium">{patient.condition}</div>
                     </div>
                   )}
 
                   {patient.notes && (
-                    <div className="mt-2">
-                      <div className="text-xs text-[#213448]/60">
-                        Notes (patient-level)
-                      </div>
-                      <div className="font-medium whitespace-pre-wrap">
-                        {patient.notes}
+                    <div className="flex items-start gap-3">
+                      <FileText className="w-5 h-5 text-[#90AB8B] mt-0.5" />
+                      <div className="flex-1">
+                        <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                          Notes
+                        </div>
+                        <div className="text-[#213448]/80 whitespace-pre-wrap">
+                          {patient.notes}
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-red-600">
-              {errorMsg || "Patient not found."}
-            </div>
-            <div className="mt-3 text-sm text-[#213448]/70">
-              You can create a patient record by clicking Edit and filling
-              details (phone is required).
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <div className="text-center">
+              <div className="inline-block p-4 bg-red-50 rounded-full mb-4">
+                <User className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-red-600 mb-2">
+                {errorMsg || "Patient Not Found"}
+              </h3>
+              <p className="text-sm text-[#213448]/70">
+                You can create a patient record by clicking the &quot;Add
+                Patient&quot; button above.
+              </p>
             </div>
           </div>
         )}
 
-        {/* Visits */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[#213448]">Visits</h3>
-            <div className="text-sm text-[#213448]/70">
-              {visitsLoading ? "Loading..." : `${visits.length} visit(s)`}
+        {/* Visits Section */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-[#213448] to-[#2d4a62] px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                <Stethoscope className="w-6 h-6" />
+                Medical Visits
+              </h3>
+              <div className="px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                {visitsLoading
+                  ? "Loading..."
+                  : `${visits.length} visit${visits.length !== 1 ? "s" : ""}`}
+              </div>
             </div>
           </div>
 
-          {visitsLoading ? (
-            <div className="text-sm text-[#213448]/70">Loading visits...</div>
-          ) : visits.length === 0 ? (
-            <div className="text-sm text-[#213448]/70">
-              No visits found for this patient.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {visits.map((v) => (
-                <div key={v.id} className="border rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-medium text-[#213448]">
-                      {v.visited_at
-                        ? new Date(v.visited_at).toLocaleString()
-                        : v.created_at
-                          ? new Date(v.created_at).toLocaleString()
-                          : ""}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {v.id?.slice(0, 8)}
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-[#213448]/90 mb-2">
-                    Condition:{" "}
-                    <span className="font-medium">{v.condition ?? "—"}</span>
-                  </div>
-                  <div className="text-sm text-[#213448]/80 mb-2">
-                    Notes: {v.notes ?? "—"}
-                  </div>
-
-                  {v.diagnosis && (
-                    <div className="text-sm mb-1">
-                      Diagnosis:{" "}
-                      <span className="font-medium">{v.diagnosis}</span>
-                    </div>
-                  )}
-                  {v.treatment && (
-                    <div className="text-sm mb-1">
-                      Treatment:{" "}
-                      <span className="font-medium">{v.treatment}</span>
-                    </div>
-                  )}
-                  {v.doctor_id && (
-                    <div className="text-sm mt-1">
-                      Doctor:{" "}
-                      <span className="font-medium">
-                        {doctorNameByIdLocal(v.doctor_id)}
-                      </span>
-                    </div>
-                  )}
-
-                  {v.prescriptions && (
-                    <div className="mt-2 text-sm">
-                      <div className="text-xs text-gray-500">Prescriptions</div>
-                      <ul className="list-disc ml-5 mt-1 text-sm">
-                        {Array.isArray(v.prescriptions) ? (
-                          v.prescriptions.map((rx, i) => <li key={i}>{rx}</li>)
-                        ) : (
-                          <li>{JSON.stringify(v.prescriptions)}</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+          <div className="p-6">
+            {visitsLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#90AB8B] border-t-transparent"></div>
+                <p className="mt-3 text-[#213448]/70">Loading visits...</p>
+              </div>
+            ) : visits.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
+                  <Calendar className="w-8 h-8 text-gray-400" />
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="text-[#213448]/70">
+                  No visits found for this patient.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {visits.map((v) => (
+                  <div
+                    key={v.id}
+                    className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    {/* Visit Header - Always Visible */}
+                    <div
+                      onClick={() => toggleVisit(v.id)}
+                      className="p-4 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:from-[#EBF4DD]/30 hover:to-white transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Activity className="w-5 h-5 text-[#90AB8B]" />
+                            <h4 className="text-lg font-semibold text-[#213448]">
+                              {v.condition || "General Checkup"}
+                            </h4>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-[#213448]/60">
+                            <Calendar className="w-4 h-4" />
+                            {v.visited_at
+                              ? new Date(v.visited_at).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )
+                              : v.created_at
+                                ? new Date(v.created_at).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      weekday: "short",
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )
+                                : "Date not recorded"}
+                          </div>
+                        </div>
+                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                          {expandedVisits[v.id] ? (
+                            <ChevronUp className="w-5 h-5 text-[#213448]" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-[#213448]" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Visit Details - Collapsible */}
+                    {expandedVisits[v.id] && (
+                      <div className="p-4 pt-0 border-t bg-white">
+                        <div className="space-y-4 mt-4">
+                          {v.notes && (
+                            <div className="flex items-start gap-3">
+                              <FileText className="w-5 h-5 text-[#90AB8B] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                                  Notes
+                                </div>
+                                <div className="text-[#213448]/80">
+                                  {v.notes}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {v.diagnosis && (
+                            <div className="flex items-start gap-3">
+                              <Stethoscope className="w-5 h-5 text-[#90AB8B] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                                  Diagnosis
+                                </div>
+                                <div className="text-[#213448] font-medium">
+                                  {v.diagnosis}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {v.treatment && (
+                            <div className="flex items-start gap-3">
+                              <Activity className="w-5 h-5 text-[#90AB8B] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                                  Treatment
+                                </div>
+                                <div className="text-[#213448] font-medium">
+                                  {v.treatment}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {v.doctor_id && (
+                            <div className="flex items-start gap-3">
+                              <UserCircle className="w-5 h-5 text-[#90AB8B] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-1">
+                                  Attending Doctor
+                                </div>
+                                <div className="text-[#213448] font-medium">
+                                  {doctorNameByIdLocal(v.doctor_id)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {v.prescriptions && (
+                            <div className="flex items-start gap-3">
+                              <Pill className="w-5 h-5 text-[#90AB8B] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <div className="text-xs text-[#213448]/60 uppercase tracking-wide mb-2">
+                                  Prescriptions
+                                </div>
+                                <div className="bg-[#EBF4DD]/30 rounded-lg p-3">
+                                  <ul className="space-y-2">
+                                    {Array.isArray(v.prescriptions) ? (
+                                      v.prescriptions.map((rx, i) => (
+                                        <li
+                                          key={i}
+                                          className="flex items-start gap-2 text-[#213448]/80"
+                                        >
+                                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#90AB8B] mt-2 flex-shrink-0"></span>
+                                          <span>{rx}</span>
+                                        </li>
+                                      ))
+                                    ) : (
+                                      <li className="text-[#213448]/80">
+                                        {JSON.stringify(v.prescriptions)}
+                                      </li>
+                                    )}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="pt-3 border-t">
+                            {/* <div className="text-xs text-[#213448]/40 font-mono">
+                              Visit ID: {v.id?.slice(0, 16)}
+                            </div> */}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Patient add/edit modal (manual trigger via Edit button) */}
+      {/* Modals */}
       <PatientModal
         open={patientModalOpen}
         mode={patientModalMode}
         initialData={patientModalInitial}
         onClose={async () => {
           setPatientModalOpen(false)
-          // refresh after close using phone from profile or prop
           const phone = patientNumber || profileState?.mob_num
           if (phone) await fetchPatientByPhone(phone)
         }}
         onSaved={handlePatientModalSaved}
       />
 
-      {/* Update phone modal: only open when phoneModalOpen true */}
       <UpdatePhoneModal
         open={phoneModalOpen}
         patientId={profileState?.id}
