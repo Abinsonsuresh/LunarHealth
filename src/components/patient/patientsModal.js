@@ -260,6 +260,21 @@ export default function PatientModal({
         onSaved?.(data, { mode: "edit" })
         onClose?.()
       } else {
+        // Check if mobile number already exists
+        const { data: existingPatients, error: checkError } = await supabase
+          .from("patients")
+          .select("id")
+          .eq("mobile_phone", form.mobile_phone)
+          .limit(1)
+
+        if (checkError) throw checkError
+
+        if (existingPatients && existingPatients.length > 0) {
+          setErrorMsg("A patient with this mobile number already exists.")
+          setSaving(false)
+          return
+        }
+
         // create patient
         const toInsert = {
           full_name: form.full_name,
@@ -576,8 +591,48 @@ export default function PatientModal({
               </div>
             </div>
 
+            {(() => {
+              const isDataChanged =
+                mode === "edit" &&
+                initialData &&
+                (form.full_name !== initialData.full_name ||
+                  form.mobile_phone !== (initialData.mobile_phone || "") ||
+                  (form.age ? parseInt(form.age, 10) : null) !==
+                    (initialData.age ? parseInt(initialData.age, 10) : null) ||
+                  (form.gender || "") !== (initialData.gender || ""))
+
+              const isSubmitDisabled =
+                saving ||
+                (mode === "edit"
+                  ? !isDataChanged
+                  : !form.full_name || !form.mobile_phone)
+
+              return (
+                <div className="mt-4 flex items-center justify-end gap-3 pb-6">
+                  {/* <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
+                  >
+                    Cancel
+                  </button> */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitDisabled}
+                    className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving
+                      ? "Saving..."
+                      : mode === "edit"
+                        ? "Update patient"
+                        : "Save patient"}
+                  </button>
+                </div>
+              )
+            })()}
+
             {/* Visit inputs */}
-            <div className="mt-6 border-t border-gray-100 pt-4">
+            <div className="mt-0 border-t border-gray-100 pt-4">
               <h3 className="text-md font-semibold mb-3 text-[#213448]">
                 Visit (initial or new)
               </h3>
@@ -729,27 +784,6 @@ export default function PatientModal({
                   </button>
                 </div>
               )}
-            </div>
-
-            <div className="mt-4 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving
-                  ? "Saving..."
-                  : mode === "edit"
-                    ? "Update patient"
-                    : "Save patient"}
-              </button>
             </div>
           </form>
         )}
