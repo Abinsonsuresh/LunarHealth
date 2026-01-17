@@ -23,6 +23,8 @@ export default function DashboardPatients() {
   const [errorMsg, setErrorMsg] = useState("")
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [viewPatient, setViewPatient] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   useEffect(() => {
     fetchPatients()
@@ -67,6 +69,22 @@ export default function DashboardPatients() {
 
   function handleModalSaved(data, { mode }) {
     fetchPatients()
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(patients.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPatients = patients.slice(startIndex, endIndex)
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value)
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1) // Reset to first page
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
   }
 
   return (
@@ -153,6 +171,35 @@ export default function DashboardPatients() {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Pagination Controls - Top */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="itemsPerPage"
+                  className="text-sm font-medium text-[#213448]"
+                >
+                  Items per page:
+                </label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  className="px-3 py-1.5 rounded-md border border-gray-300 text-sm bg-white text-[#213448] focus:outline-none focus:ring-2 focus:ring-[#90AB8B]"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="text-sm text-[#213448]/70">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, patients.length)} of {patients.length}{" "}
+                patients
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-[#213448] text-white">
@@ -190,7 +237,7 @@ export default function DashboardPatients() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {patients.length === 0 && (
+                  {currentPatients.length === 0 && (
                     <tr>
                       <td
                         colSpan={7}
@@ -207,7 +254,7 @@ export default function DashboardPatients() {
                     </tr>
                   )}
 
-                  {patients.map((p, idx) => (
+                  {currentPatients.map((p, idx) => (
                     <tr
                       key={p.id}
                       className="hover:bg-[#EBF4DD]/30 transition-colors duration-150"
@@ -279,6 +326,60 @@ export default function DashboardPatients() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls - Bottom */}
+            {patients.length > 0 && (
+              <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-[#213448]/70">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-md border border-gray-300 text-sm font-medium text-[#213448] bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page numbers */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(
+                        (page) =>
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1),
+                      )
+                      .map((page, idx, arr) => (
+                        <React.Fragment key={page}>
+                          {idx > 0 && arr[idx - 1] !== page - 1 && (
+                            <span className="px-2 text-[#213448]/50">...</span>
+                          )}
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              currentPage === page
+                                ? "bg-[#90AB8B] text-white"
+                                : "border border-gray-300 text-[#213448] bg-white hover:bg-gray-100"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-md border border-gray-300 text-sm font-medium text-[#213448] bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
