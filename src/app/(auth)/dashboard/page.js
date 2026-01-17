@@ -11,6 +11,20 @@ export default async function DashboardPage() {
   const session = data?.session
 
   const userEmail = session?.user?.email ?? "Unknown"
+  const userId = session.user.id
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("full_name, role, email")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    console.error("Profile fetch error:", error)
+    redirect("/login")
+  }
+
+  console.log(profile)
 
   // Example server-side query using RLS (optional)
   // const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
