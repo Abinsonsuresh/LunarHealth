@@ -1,5 +1,6 @@
 // src/app/(auth)/dashboard/page.js
 
+import DashboardAdmin from "@/components/pages/dashboardAdmin"
 import DashboardPatients from "@/components/pages/dashboardPatients"
 import SignOutButton from "@/components/SignOutButton"
 import Sidebar from "@/components/ui/sidebar"
@@ -11,6 +12,20 @@ export default async function DashboardPage() {
   const session = data?.session
 
   const userEmail = session?.user?.email ?? "Unknown"
+  const userId = session.user.id
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("full_name, role, email")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    console.error("Profile fetch error:", error)
+    redirect("/login")
+  }
+
+  console.log(profile)
 
   // Example server-side query using RLS (optional)
   // const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
@@ -18,7 +33,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar userEmail={userEmail} />
+      <Sidebar profile={profile} userEmail={userEmail} />
 
       {/* Main content */}
       <main className="flex-1 p-6">
@@ -26,7 +41,9 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-semibold text-[#213448]">Dashboard</h1>
         </div>
 
-        <DashboardPatients />
+        {profile?.role === "super_admin" && <DashboardAdmin />}
+        {profile?.role === "attender" && <DashboardPatients />}
+        {profile?.role === "doctor" && <DashboardPatients />}
       </main>
     </div>
   )
