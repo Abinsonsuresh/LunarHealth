@@ -1,5 +1,5 @@
 // src/app/components/SignOutButton.js
-"use client"
+// "use client"
 import { supabase } from "@/libs/supabase/supabaseBrowser"
 
 export default function SignOutButton() {
