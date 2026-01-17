@@ -12,6 +12,7 @@ import {
   Users,
   Activity,
   Eye,
+  Search,
 } from "lucide-react"
 
 export default function DashboardPatients() {
@@ -19,6 +20,7 @@ export default function DashboardPatients() {
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState("add")
+  const [searchEnabled, setSearchEnabled] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [errorMsg, setErrorMsg] = useState("")
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -53,12 +55,21 @@ export default function DashboardPatients() {
   function openAddModal() {
     setSelectedPatient(null)
     setModalMode("add")
+    setSearchEnabled(false)
+    setModalOpen(true)
+  }
+
+  function openAddExistingModal() {
+    setSelectedPatient(null)
+    setModalMode("add")
+    setSearchEnabled(true)
     setModalOpen(true)
   }
 
   function openEditModal(patient) {
     setSelectedPatient(patient)
     setModalMode("edit")
+    setSearchEnabled(false)
     setModalOpen(true)
   }
 
@@ -69,6 +80,13 @@ export default function DashboardPatients() {
 
   function handleModalSaved(data, { mode }) {
     fetchPatients()
+  }
+
+  function handlePatientSelect(patient) {
+    // Switch to edit mode for the selected patient
+    setSelectedPatient(patient)
+    setModalMode("edit")
+    setSearchEnabled(false)
   }
 
   // Pagination logic
@@ -102,13 +120,22 @@ export default function DashboardPatients() {
                 Manage and track all your patients in one place
               </p>
             </div>
-            <button
-              onClick={openAddModal}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg bg-[#90AB8B] text-white font-medium shadow-lg hover:bg-[#7a9576] transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto"
-            >
-              <UserPlus className="w-5 h-5" />
-              Add Patient
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={openAddExistingModal}
+                className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg bg-[#213448] text-white font-medium shadow-md hover:bg-[#1a2a3a] transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto"
+              >
+                <Search className="w-5 h-5" />
+                Add Existing Patient
+              </button>
+              <button
+                onClick={openAddModal}
+                className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg bg-[#90AB8B] text-white font-medium shadow-lg hover:bg-[#7a9576] transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 w-full sm:w-auto"
+              >
+                <UserPlus className="w-5 h-5" />
+                Add Patient
+              </button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -386,6 +413,8 @@ export default function DashboardPatients() {
         <PatientModal
           open={modalOpen}
           mode={modalMode}
+          enableSearch={searchEnabled}
+          onPatientSelect={handlePatientSelect}
           initialData={modalMode === "edit" ? selectedPatient : null}
           onClose={() => setModalOpen(false)}
           onSaved={handleModalSaved}
