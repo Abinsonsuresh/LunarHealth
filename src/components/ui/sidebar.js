@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import SignOutButton from "../SignOutButton"
 
-export default function Sidebar({ userEmail }) {
+export default function Sidebar({ userEmail, profile }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -27,7 +27,10 @@ export default function Sidebar({ userEmail }) {
   }, [])
 
   const navItems = [
-    { label: "Patients", href: "/dashboard" },
+    {
+      label: profile?.role === "super_admin" ? "Users" : "Patients",
+      href: "/dashboard",
+    },
     { label: "Settings", href: "/dashboard/settings" },
     { label: "About", href: "/dashboard/about" },
   ]

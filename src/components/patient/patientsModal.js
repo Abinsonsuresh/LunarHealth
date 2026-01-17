@@ -260,7 +260,7 @@ export default function PatientModal({
         }
 
         // Generate QR for the patient URL
-        const patientUrl = `https://lunarhealth/patients/${patientId}`
+        const patientUrl = `http://localhost:3000/patients/${patientId}`
         try {
           const qrImage = await generateQRCode(patientUrl, {
             width: 256,
@@ -675,7 +675,7 @@ export default function PatientModal({
             />
 
             <div className="mt-2 font-mono text-sm text-[#213448]">
-              https://lunarhealth/patients/{generatedId}
+              http://localhost:3000/patients/{generatedId}
             </div>
           </div>
         )}

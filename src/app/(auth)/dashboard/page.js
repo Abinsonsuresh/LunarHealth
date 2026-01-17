@@ -1,4 +1,6 @@
 // src/app/(auth)/dashboard/page.js
+
+import DashboardAdmin from "@/components/pages/dashboardAdmin"
 import DashboardPatients from "@/components/pages/dashboardPatients"
 import SignOutButton from "@/components/SignOutButton"
 import Sidebar from "@/components/ui/sidebar"
@@ -9,11 +11,25 @@ export default async function DashboardPage() {
   const { data } = await supabase.auth.getSession()
   const session = data?.session
   const userEmail = session?.user?.email ?? "Unknown"
+  const userId = session.user.id
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("full_name, role, email")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    console.error("Profile fetch error:", error)
+    redirect("/login")
+  }
+
+  console.log(profile)
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
-      <Sidebar userEmail={userEmail} />
+      <Sidebar profile={profile} userEmail={userEmail} />
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
@@ -22,7 +38,10 @@ export default async function DashboardPage() {
             Dashboard
           </h1>
         </div>
-        <DashboardPatients />
+
+        {profile?.role === "super_admin" && <DashboardAdmin />}
+        {profile?.role === "attender" && <DashboardPatients />}
+        {profile?.role === "doctor" && <DashboardPatients />}
       </main>
     </div>
   )
