@@ -104,7 +104,7 @@ export default function UserModal({ open, onClose, onSaved }) {
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-3 py-2 text-[#213448]"
               placeholder="Alice Johnson"
             />
           </div>
@@ -117,7 +117,7 @@ export default function UserModal({ open, onClose, onSaved }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-3 py-2 text-[#213448]"
               placeholder="alice@example.com"
               required
             />
@@ -128,13 +128,17 @@ export default function UserModal({ open, onClose, onSaved }) {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-3 py-2 text-[#213448]"
             >
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-              <option value="doctor">doctor</option>
-              <option value="attender">attender</option>
-              <option value="receptionist">receptionist</option>
+              <option value="admin" className="text-[#213448]">
+                admin
+              </option>
+              <option value="doctor" className="text-[#213448]">
+                doctor
+              </option>
+              <option value="attender" className="text-[#213448]">
+                attender
+              </option>
             </select>
           </div>
 
@@ -146,7 +150,7 @@ export default function UserModal({ open, onClose, onSaved }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-3 py-2 text-[#213448]"
               placeholder="Set a temporary password"
               required
             />
@@ -158,7 +162,7 @@ export default function UserModal({ open, onClose, onSaved }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-md border text-sm"
+              className="px-4 py-2 rounded-md border text-sm text-[#213448]"
               disabled={loading}
             >
               Cancel
