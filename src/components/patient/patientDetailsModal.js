@@ -41,14 +41,41 @@ export function PatientDetailsModal({
 
   useEffect(() => {
     if (open) {
-      if (initialData) {
+      if (patientId) {
+        fetchUserDetails(patientId)
+      } else if (initialData) {
         setForm((f) => ({ ...f, ...mapInitial(initialData) }))
       } else {
-        setForm({ ...empty, patient_id: patientId ?? null })
+        setForm({ ...empty, patient_id: null })
       }
     }
-    // keep patientId in sync when modal opens for different patients
   }, [open, initialData, patientId])
+
+  async function fetchUserDetails(id) {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from("user_details")
+        .select("*")
+        .eq("patient_id", id)
+        .maybeSingle()
+
+      if (error) throw error
+
+      if (data) {
+        setForm((f) => ({ ...f, ...mapInitial(data) }))
+      } else if (initialData) {
+        setForm((f) => ({ ...f, ...mapInitial(initialData) }))
+      } else {
+        setForm({ ...empty, patient_id: id })
+      }
+    } catch (err) {
+      console.error("fetchUserDetails", err)
+      setError("Failed to fetch current details.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function mapInitial(data) {
     return {
