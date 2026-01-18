@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata = {
-  title: "Next Js Template",
+  title: "LunarHealth 360",
   description: "Project description",
 }
 
