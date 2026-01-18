@@ -288,7 +288,7 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
               </p>
             </div>
 
-            <button
+            {/* <button
               onClick={() => {
                 setPatientModalMode(patient ? "edit" : "add")
                 setPatientModalInitial(
@@ -302,7 +302,7 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
             >
               <Edit3 className="w-4 h-4" />
               {patient ? "Edit Patient" : "Add Patient"}
-            </button>
+            </button> */}
           </div>
         </div>
 

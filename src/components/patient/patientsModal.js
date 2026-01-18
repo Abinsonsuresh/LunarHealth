@@ -94,7 +94,7 @@ export default function PatientModal({
     const handler = setTimeout(() => {
       setDebouncedName(form.full_name)
       setDebouncedMobile(form.mobile_phone)
-    }, 3000)
+    }, 2000)
 
     return () => {
       clearTimeout(handler)
@@ -112,8 +112,20 @@ export default function PatientModal({
       performSearch()
     } else {
       setSearchResults([])
+      setIsSearching(false)
     }
   }, [debouncedName, debouncedMobile, enableSearch, mode])
+
+  // Immediate loader trigger
+  useEffect(() => {
+    if (!enableSearch || mode !== "add") return
+
+    if (form.full_name || form.mobile_phone) {
+      setIsSearching(true)
+    } else {
+      setIsSearching(false)
+    }
+  }, [form.full_name, form.mobile_phone, enableSearch, mode])
 
   async function performSearch() {
     setIsSearching(true)
@@ -499,67 +511,92 @@ export default function PatientModal({
             {/* Patient form */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
               {/* Search results overlay */}
-              {mode === "add" && enableSearch && searchResults.length > 0 && (
-                <div className="absolute top-20 left-0 right-0 z-10 bg-white border border-[#90AB8B] rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                  <div className="p-2 bg-[#EBF4DD] text-xs font-semibold text-[#213448] uppercase tracking-wider">
-                    Found Existing Patients ({searchResults.length})
+              {mode === "add" &&
+                enableSearch &&
+                (searchResults.length > 0 || isSearching) && (
+                  <div className="absolute top-20 left-0 right-0 z-10 bg-white border border-[#90AB8B] rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div className="p-2 bg-[#EBF4DD] text-xs font-semibold text-[#213448] uppercase tracking-wider flex items-center justify-between">
+                      <span>
+                        {isSearching
+                          ? "Searching Patients..."
+                          : `Found Existing Patients (${searchResults.length})`}
+                      </span>
+                      {isSearching && (
+                        <div className="w-4 h-4 border-2 border-[#90AB8B] border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                    </div>
+                    {!isSearching &&
+                      searchResults.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => onPatientSelect && onPatientSelect(p)}
+                          className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors flex justify-between items-center group"
+                        >
+                          <div>
+                            <div className="font-medium text-[#213448]">
+                              {p.full_name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {p.age} yrs • {p.gender} • {p.mobile_phone}
+                            </div>
+                          </div>
+                          <div className="text-xs bg-[#213448] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            Select
+                          </div>
+                        </button>
+                      ))}
+                    {isSearching && searchResults.length === 0 && (
+                      <div className="p-8 text-center text-gray-400">
+                        <div className="inline-block w-8 h-8 border-3 border-[#90AB8B] border-t-transparent rounded-full animate-spin mb-2"></div>
+                        <p className="text-sm">Searching our database...</p>
+                      </div>
+                    )}
                   </div>
-                  {searchResults.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => onPatientSelect && onPatientSelect(p)}
-                      className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors flex justify-between items-center group"
-                    >
-                      <div>
-                        <div className="font-medium text-[#213448]">
-                          {p.full_name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {p.age} yrs • {p.gender} • {p.mobile_phone}
-                        </div>
-                      </div>
-                      <div className="text-xs bg-[#213448] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        Select
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                )}
 
               <div>
                 <label className="block text-sm font-medium mb-1 text-[#213448]">
                   Full name *
                 </label>
-                <input
-                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  value={form.full_name}
-                  onChange={(e) => updateForm("full_name", e.target.value)}
-                  placeholder={
-                    enableSearch && mode === "add" ? "Type to search..." : ""
-                  }
-                  required
-                />
-                {isSearching && (
-                  <div className="text-xs text-[#90AB8B] mt-1">
-                    Searching...
-                  </div>
-                )}
+                <div className="relative">
+                  <input
+                    className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    value={form.full_name}
+                    onChange={(e) => updateForm("full_name", e.target.value)}
+                    placeholder={
+                      enableSearch && mode === "add" ? "Type to search..." : ""
+                    }
+                    required
+                  />
+                  {isSearching && enableSearch && mode === "add" && (
+                    <div className="absolute right-3 top-2.5">
+                      <div className="w-5 h-5 border-2 border-[#90AB8B] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1 text-[#213448]">
                   Mobile phone *
                 </label>
-                <input
-                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  value={form.mobile_phone}
-                  onChange={(e) => updateForm("mobile_phone", e.target.value)}
-                  placeholder={
-                    enableSearch && mode === "add" ? "Type to search..." : ""
-                  }
-                  required
-                />
+                <div className="relative">
+                  <input
+                    className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    value={form.mobile_phone}
+                    onChange={(e) => updateForm("mobile_phone", e.target.value)}
+                    placeholder={
+                      enableSearch && mode === "add" ? "Type to search..." : ""
+                    }
+                    required
+                  />
+                  {isSearching && enableSearch && mode === "add" && (
+                    <div className="absolute right-3 top-2.5">
+                      <div className="w-5 h-5 border-2 border-[#90AB8B] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
