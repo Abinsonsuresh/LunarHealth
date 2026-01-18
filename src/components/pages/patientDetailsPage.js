@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import PatientModal from "../patient/patientsModal"
 import UpdatePhoneModal from "../patient/updatePhone"
 import { supabase } from "@/utils/config"
 import {
@@ -16,9 +15,11 @@ import {
   ChevronUp,
   Activity,
   UserCircle,
+  Plus,
 } from "lucide-react"
 import axios from "axios"
 import { HealthAnalysisComponent } from "../patient/HealthAnalysisComponent"
+import { PatientDetailsModal } from "../patient/patientDetailsModal"
 
 export default function PatientDetailsPage({ patientNumber, profile }) {
   const [profileState, setProfileState] = useState(profile || null)
@@ -35,8 +36,9 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
   const [loadingAiData, setLoadingAiData] = useState(false)
   const [aiError, setAiError] = useState(null)
 
+  // Modal state
   const [patientModalOpen, setPatientModalOpen] = useState(false)
-  const [patientModalMode, setPatientModalMode] = useState("edit")
+  const [patientModalMode, setPatientModalMode] = useState("edit") // "add" | "edit"
   const [patientModalInitial, setPatientModalInitial] = useState(null)
 
   const [phoneModalOpen, setPhoneModalOpen] = useState(false)
@@ -166,7 +168,6 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
         },
       )
 
-      // ✅ IMPORTANT FIX
       const analysis = response.data?.data?.analysis || null
       setAiData(analysis)
 
@@ -231,6 +232,7 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
     }
   }
 
+  // existing handler (keeps behavior you wrote)
   async function handlePatientModalSaved(data, meta) {
     if (data?.id) {
       setPatient(data)
@@ -267,6 +269,37 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
 
   const phoneToShow = patientNumber || profileState?.mob_num || "(no phone)"
 
+  // --- Modal open/close helpers (fixed)
+  function openAddModal() {
+    setPatientModalMode("add")
+    setPatientModalInitial({
+      phone: patientNumber || profileState?.mob_num || "",
+    })
+    setPatientModalOpen(true)
+  }
+
+  function openEditModal() {
+    if (!patient) return
+    setPatientModalMode("edit")
+    setPatientModalInitial(patient)
+    setPatientModalOpen(true)
+  }
+
+  async function handleModalClose() {
+    setPatientModalOpen(false)
+    // refresh patient list/view after closing modal
+    const phone = patientNumber || profileState?.mob_num
+    if (phone) {
+      await fetchPatientByPhone(phone)
+    }
+  }
+
+  async function handleModalSaved(saved) {
+    // called when modal reports saved row
+    setPatientModalOpen(false)
+    await handlePatientModalSaved(saved)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-5xl mx-auto p-6 lg:p-8">
@@ -288,21 +321,29 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
               </p>
             </div>
 
-            {/* <button
-              onClick={() => {
-                setPatientModalMode(patient ? "edit" : "add")
-                setPatientModalInitial(
-                  patient ?? {
-                    mobile_phone: patientNumber ?? profileState?.mob_num ?? "",
-                  },
-                )
-                setPatientModalOpen(true)
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#90AB8B] text-white hover:bg-[#7a9476] transition-all shadow-md hover:shadow-lg"
-            >
-              <Edit3 className="w-4 h-4" />
-              {patient ? "Edit Patient" : "Add Patient"}
-            </button> */}
+            <div className="flex items-center gap-3">
+              {/* Add Patient */}
+              <button
+                onClick={() => {
+                  openAddModal()
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#90AB8B] text-white hover:bg-[#7a9476] transition-all shadow-md hover:shadow-lg"
+              >
+                <Plus className="w-4 h-4" />
+                Enter Details
+              </button>
+
+              {/* Edit Patient (only show if patient exists) */}
+              {patient && (
+                <button
+                  onClick={() => openEditModal()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border text-[#213448] hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit Details
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -439,7 +480,6 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
         )}
 
         {/* AI Analysis Section */}
-
         <HealthAnalysisComponent
           aiData={aiData}
           loadingAiData={loadingAiData}
@@ -624,11 +664,7 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
                             </div>
                           )}
 
-                          <div className="pt-3 border-t">
-                            {/* <div className="text-xs text-[#213448]/40 font-mono">
-                              Visit ID: {v.id?.slice(0, 16)}
-                            </div> */}
-                          </div>
+                          <div className="pt-3 border-t"></div>
                         </div>
                       </div>
                     )}
@@ -641,17 +677,13 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
       </div>
 
       {/* Modals */}
-      <PatientModal
+      <PatientDetailsModal
         open={patientModalOpen}
         mode={patientModalMode}
         initialData={patientModalInitial}
-        userRole={profileState?.role}
-        onClose={async () => {
-          setPatientModalOpen(false)
-          const phone = patientNumber || profileState?.mob_num
-          if (phone) await fetchPatientByPhone(phone)
-        }}
-        onSaved={handlePatientModalSaved}
+        onClose={handleModalClose}
+        onSaved={handleModalSaved}
+        patientId={patient && patient?.id}
       />
 
       <UpdatePhoneModal
