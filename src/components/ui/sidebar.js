@@ -40,12 +40,7 @@ export default function Sidebar({ userEmail, profile }) {
       icon: Users,
     },
     {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: Settings,
-    },
-    {
-      label: "About",
+      label: "About Us",
       href: "/dashboard/about",
       icon: Info,
     },
@@ -195,16 +190,7 @@ export default function Sidebar({ userEmail, profile }) {
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="flex gap-2">
-                <Link
-                  href="/dashboard/settings"
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#EBF4DD] hover:bg-[#90AB8B]/30 rounded-lg transition-all text-[#213448] text-sm font-medium"
-                >
-                  <User className="w-4 h-4" />
-                  Profile
-                </Link>
-              </div>
+              {/* Quick Actions Removed */}
             </div>
 
             {/* Sign Out Button */}

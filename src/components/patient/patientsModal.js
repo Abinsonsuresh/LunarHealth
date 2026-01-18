@@ -532,7 +532,7 @@ export default function PatientModal({
                   Full name *
                 </label>
                 <input
-                  className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.full_name}
                   onChange={(e) => updateForm("full_name", e.target.value)}
                   placeholder={
@@ -552,7 +552,7 @@ export default function PatientModal({
                   Mobile phone *
                 </label>
                 <input
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.mobile_phone}
                   onChange={(e) => updateForm("mobile_phone", e.target.value)}
                   placeholder={
@@ -568,7 +568,7 @@ export default function PatientModal({
                 </label>
                 <input
                   type="number"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.age}
                   onChange={(e) => updateForm("age", e.target.value)}
                   min={0}
@@ -580,7 +580,7 @@ export default function PatientModal({
                   Gender
                 </label>
                 <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
+                  className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
                   value={form.gender}
                   onChange={(e) => updateForm("gender", e.target.value)}
                 >
@@ -637,7 +637,7 @@ export default function PatientModal({
                       onChange={(e) =>
                         updateVisitForm("doctor_id", e.target.value)
                       }
-                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       disabled={userRole === "attender"}
                     >
                       <option value="">Select doctor</option>
@@ -654,7 +654,7 @@ export default function PatientModal({
                       Diagnosis
                     </label>
                     <input
-                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       value={visitForm.diagnosis}
                       onChange={(e) =>
                         updateVisitForm("diagnosis", e.target.value)
@@ -668,7 +668,7 @@ export default function PatientModal({
                       Treatment
                     </label>
                     <input
-                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       value={visitForm.treatment}
                       onChange={(e) =>
                         updateVisitForm("treatment", e.target.value)
@@ -709,9 +709,18 @@ export default function PatientModal({
                           ...base,
                           borderColor: "#d1d5db",
                           borderRadius: "6px",
+                          color: "#213448",
                           "&:hover": {
                             borderColor: "#9ca3af",
                           },
+                        }),
+                        singleValue: (base) => ({
+                          ...base,
+                          color: "#213448",
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          color: "#213448",
                         }),
                         option: (base, state) => ({
                           ...base,
@@ -747,7 +756,7 @@ export default function PatientModal({
                       Condition
                     </label>
                     <input
-                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2"
                       value={visitForm.condition}
                       onChange={(e) =>
                         updateVisitForm("condition", e.target.value)
@@ -761,7 +770,7 @@ export default function PatientModal({
                     </label>
                     <textarea
                       rows={3}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      className="w-full border text-[#213448] border-gray-300 rounded px-3 py-2"
                       value={visitForm.notes}
                       onChange={(e) => updateVisitForm("notes", e.target.value)}
                     />
