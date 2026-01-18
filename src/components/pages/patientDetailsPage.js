@@ -162,11 +162,15 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
       const response = await axios.post(
         "http://localhost:5001/api/v1/patient",
         {
-          patient_id: patientId, // ✅ DIRECT BODY
+          patient_id: patientId,
         },
       )
 
-      setAiData(response.data?.data)
+      // ✅ IMPORTANT FIX
+      const analysis = response.data?.data?.analysis || null
+      setAiData(analysis)
+
+      console.log("AI ANALYSIS RECEIVED:", analysis)
     } catch (err) {
       console.error("fetchAiData", err)
 

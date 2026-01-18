@@ -8,6 +8,14 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  Brain,
+  Sparkles,
+  Zap,
+  ShieldAlert,
+  ArrowRight,
+  Info,
+  Stethoscope,
+  ChevronRight,
 } from "lucide-react"
 
 export const HealthAnalysisComponent = ({ aiData, loadingAiData, aiError }) => {
@@ -15,18 +23,39 @@ export const HealthAnalysisComponent = ({ aiData, loadingAiData, aiError }) => {
 
   if (loadingAiData) {
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-[#90AB8B]/30">
-        <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] px-6 py-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-white flex items-center gap-3">
-            <Activity className="w-6 h-6 animate-pulse" />
-            AI Health Analysis
-          </h3>
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 border border-indigo-100 animate-in fade-in duration-500">
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] animate-gradient px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+              <Brain className="w-6 h-6 text-white animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white leading-tight">
+                AI Health Synthesizer
+              </h3>
+              <p className="text-indigo-100 text-xs font-medium">
+                Processing medical records...
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/80 animate-bounce"></div>
+          </div>
         </div>
-        <div className="p-6 space-y-3">
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+        <div className="p-8 space-y-6">
+          <div className="flex gap-4">
+            <div className="w-12 h-12 rounded-full bg-gray-100 animate-pulse flex-shrink-0"></div>
+            <div className="flex-1 space-y-3 pt-2">
+              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4"></div>
+              <div className="h-3 bg-gray-50 rounded animate-pulse w-5/6"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-24 bg-gray-50 rounded-xl animate-pulse"></div>
+            <div className="h-24 bg-gray-50 rounded-xl animate-pulse"></div>
+          </div>
         </div>
       </div>
     )
@@ -34,356 +63,336 @@ export const HealthAnalysisComponent = ({ aiData, loadingAiData, aiError }) => {
 
   if (aiError) {
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-red-200">
-        <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] px-6 py-4">
-          <h3 className="text-xl font-bold text-white flex items-center gap-3">
-            <Activity className="w-6 h-6" />
-            AI Health Analysis
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8 border border-red-100">
+        <div className="bg-red-50 px-6 py-4 flex items-center gap-3 border-b border-red-100">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <h3 className="text-lg font-bold text-red-900">
+            Analysis Unavailable
           </h3>
         </div>
-        <div className="p-6">
-          <div className="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-lg">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="text-sm font-medium">
-              Unable to connect to AI analysis assistant. Please try again
-              later.
-            </p>
+        <div className="p-8 text-center">
+          <div className="inline-flex p-4 bg-red-50 rounded-full mb-4">
+            <ShieldAlert className="w-8 h-8 text-red-400" />
           </div>
+          <p className="text-gray-600 max-w-sm mx-auto mb-6">
+            We encountered an issue while generating your health insights. This
+            could be due to a temporary connection problem.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md"
+          >
+            Retry Analysis
+          </button>
         </div>
       </div>
     )
   }
 
-  if (!aiData || !aiData.data) {
+  if (!aiData) {
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-[#90AB8B]/30">
-        <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] px-6 py-4">
-          <h3 className="text-xl font-bold text-white flex items-center gap-3">
-            <Activity className="w-6 h-6" />
-            AI Health Analysis
-          </h3>
+      <div className="bg-white rounded-2xl shadow-lg border-2 border-dashed border-gray-200 p-10 text-center mb-8">
+        <div className="inline-flex p-4 bg-indigo-50 rounded-full mb-4">
+          <Sparkles className="w-8 h-8 text-indigo-400" />
         </div>
-        <div className="p-6">
-          <div className="text-center py-6 text-[#213448]/60 italic">
-            Complete your visits to receive personalized AI health insights.
-          </div>
-        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">
+          Ready for Insights
+        </h3>
+        <p className="text-gray-500 max-w-sm mx-auto">
+          AI-powered analysis will appear here once medical visits are recorded
+          for this patient.
+        </p>
       </div>
     )
   }
 
-  const { analysis, visits } = aiData.data
+  // The new data structure: aiData is the analysis object
   const {
     summary,
     timeline,
     likely_outcomes,
+    risk_factors,
     recommendations,
     followup_plan,
     patient_facing_summary,
-  } = analysis
+    _meta,
+  } = aiData
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const getConditionColor = (condition) => {
-    switch (condition?.toLowerCase()) {
-      case "stable":
-        return "text-green-600 bg-green-50 border-green-200"
-      case "worse":
-        return "text-red-600 bg-red-50 border-red-200"
-      case "improving":
-        return "text-blue-600 bg-blue-50 border-blue-200"
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    } catch (e) {
+      return dateString
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "text-blue-600 bg-blue-50 border-blue-200"
-      case "admitted":
-        return "text-orange-600 bg-orange-50 border-orange-200"
-      case "discharged":
-        return "text-green-600 bg-green-50 border-green-200"
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200"
-    }
-  }
+  const tabs = [
+    { id: "overview", label: "Executive Summary", icon: Info },
+    { id: "timeline", label: "Health Journey", icon: Calendar },
+    { id: "recommendations", label: "Action Plan", icon: CheckCircle },
+  ]
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-[#90AB8B]/30">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#90AB8B] to-[#7a9476] px-6 py-4">
-        <h3 className="text-xl font-bold text-white flex items-center gap-3">
-          <Activity className="w-6 h-6" />
-          AI Health Analysis
-        </h3>
-        <p className="text-white/80 text-sm mt-1">
-          Based on {visits?.length || 0} visit{visits?.length !== 1 ? "s" : ""}
-        </p>
+    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden mb-8 border border-indigo-50 transition-all hover:shadow-indigo-100/50">
+      {/* Premium AI Header */}
+      <div className="bg-gradient-to-r from-[#213448] via-[#2d4a62] to-[#213448] px-8 py-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-[#90AB8B]/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-[#90AB8B] to-[#7a9476] rounded-xl shadow-lg shadow-[#90AB8B]/20 border border-white/20">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                LU-AI Analysis
+                <span className="text-[10px] px-2 py-0.5 bg-white/20 rounded-full font-bold uppercase tracking-widest backdrop-blur-md">
+                  Alpha
+                </span>
+              </h3>
+              <div className="flex items-center gap-2 text-indigo-100/70 text-xs mt-1">
+                <Brain className="w-3 h-3" />
+                <span>Neural synthesizer active</span>
+                <span className="w-1 h-1 rounded-full bg-green-400"></span>
+                <span>{_meta?.visits_count || 0} visits processed</span>
+              </div>
+            </div>
+          </div>
+          {_meta?.generated_at && (
+            <div className="text-right hidden sm:block">
+              <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">
+                Last Synthesis
+              </p>
+              <p className="text-xs text-white/80 font-mono">
+                {formatDate(_meta.generated_at)}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 bg-gray-50">
-        <div className="flex gap-1 px-6">
-          {["overview", "timeline", "visits", "recommendations"].map((tab) => (
+      {/* Modern Navigation */}
+      <div className="border-b border-gray-100 px-4 bg-gray-50/50">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-medium capitalize transition-colors ${
-                activeTab === tab
-                  ? "text-[#90AB8B] border-b-2 border-[#90AB8B] bg-white"
-                  : "text-gray-600 hover:text-[#90AB8B]"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all relative ${
+                activeTab === tab.id
+                  ? "text-[#213448]"
+                  : "text-gray-400 hover:text-[#90AB8B]"
               }`}
             >
-              {tab}
+              <tab.icon
+                className={`w-4 h-4 ${activeTab === tab.id ? "text-[#90AB8B]" : ""}`}
+              />
+              {tab.label}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#90AB8B] rounded-t-full shadow-[0_-2px_8px_rgba(144,171,139,0.5)]"></div>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6">
+      {/* Dynamic Content Area */}
+      <div className="p-8">
         {/* Overview Tab */}
         {activeTab === "overview" && (
-          <div className="space-y-6">
-            {/* Patient Summary */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+            {/* Patient Focused Insight */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#90AB8B] to-indigo-500 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+              <div className="relative bg-white border border-indigo-50 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-indigo-50 rounded-full flex-shrink-0">
+                    <Zap className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">
+                      Patient Summary
+                    </h4>
+                    <p className="text-lg text-[#213448] font-medium leading-relaxed italic">
+                      {`"${patient_facing_summary}"`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinical Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">
-                    Patient Summary
+                  <h4 className="text-sm font-black text-[#213448] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[#90AB8B]" />
+                    Clinical Synthesis
                   </h4>
-                  <p className="text-sm text-blue-800 leading-relaxed">
-                    {patient_facing_summary}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Clinical Summary */}
-            <div>
-              <h4 className="font-semibold text-[#213448] mb-3 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#90AB8B]" />
-                Clinical Analysis
-              </h4>
-              <p className="text-sm text-[#213448]/80 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
-                {summary}
-              </p>
-            </div>
-
-            {/* Likely Outcomes */}
-            {likely_outcomes && likely_outcomes.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-[#213448] mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#90AB8B]" />
-                  Likely Outcomes
-                </h4>
-                <div className="space-y-2">
-                  {likely_outcomes.map((outcome, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-[#90AB8B]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-[#90AB8B]">
-                          {idx + 1}
-                        </span>
-                      </div>
-                      <p className="text-sm text-[#213448]/80 flex-1">
-                        {outcome}
-                      </p>
+                  <div className="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 relative">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                      <FileText className="w-12 h-12" />
                     </div>
-                  ))}
+                    <p className="text-sm text-[#213448]/80 leading-relaxed font-medium">
+                      {summary}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Risk Factors Section */}
+                {risk_factors && risk_factors.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-black text-[#213448] uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-red-500" />
+                      Risk Assessment
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {risk_factors.map((risk, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100"
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          {risk}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="space-y-6">
+                {/* Likely Outcomes */}
+                {likely_outcomes && likely_outcomes.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-black text-[#213448] uppercase tracking-widest mb-4 flex items-center gap-2 text-indigo-600">
+                      <TrendingUp className="w-4 h-4" />
+                      Projected Trajectory
+                    </h4>
+                    <div className="space-y-3">
+                      {likely_outcomes.map((outcome, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-indigo-200 transition-colors group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 transition-colors">
+                            <span className="text-xs font-black text-indigo-600 group-hover:text-white">
+                              {idx + 1}
+                            </span>
+                          </div>
+                          <p className="text-sm text-[#213448]/80 font-medium">
+                            {outcome}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Timeline Tab */}
         {activeTab === "timeline" && (
-          <div className="space-y-4">
-            <h4 className="font-semibold text-[#213448] mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#90AB8B]" />
-              Medical Timeline
-            </h4>
-            <div className="relative">
-              {timeline &&
-                timeline.map((event, idx) => (
-                  <div key={event.id} className="relative pl-8 pb-6 last:pb-0">
-                    {/* Timeline line */}
-                    {idx !== timeline.length - 1 && (
-                      <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-[#90AB8B]/30"></div>
-                    )}
-                    {/* Timeline dot */}
-                    <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-[#90AB8B] border-4 border-white shadow-md"></div>
-                    {/* Content */}
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-[#90AB8B]" />
-                        <span className="text-xs font-medium text-[#90AB8B]">
-                          {formatDate(event.date)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-[#213448]">{event.short}</p>
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
+            <div className="relative pl-12 border-l-2 border-[#90AB8B]/20 ml-6 space-y-12 py-4">
+              {timeline?.map((event, idx) => (
+                <div key={event.id || idx} className="relative">
+                  {/* Modern Timeline Node */}
+                  <div className="absolute -left-[61px] top-0 flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-white border-2 border-[#90AB8B] flex items-center justify-center shadow-lg group">
+                      <Clock className="w-5 h-5 text-[#90AB8B]" />
                     </div>
                   </div>
-                ))}
-            </div>
-          </div>
-        )}
 
-        {/* Visits Tab */}
-        {activeTab === "visits" && (
-          <div className="space-y-4">
-            <h4 className="font-semibold text-[#213448] mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#90AB8B]" />
-              Visit Details
-            </h4>
-            {visits &&
-              visits.map((visit, idx) => (
-                <div
-                  key={visit.id}
-                  className="border border-gray-200 rounded-lg overflow-hidden"
-                >
-                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[#213448]">
-                        Visit {visits.length - idx}
-                      </span>
-                      <span className="text-xs text-gray-600">
-                        {formatDate(visit.visited_at)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-1">
-                          Diagnosis
-                        </span>
-                        <span className="text-sm font-semibold text-[#213448] capitalize">
-                          {visit.diagnosis}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-1">
-                          Treatment
-                        </span>
-                        <span className="text-sm text-[#213448] capitalize">
-                          {visit.treatment}
-                        </span>
+                  <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group relative">
+                    <div className="absolute top-0 right-0 p-4">
+                      <div className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-black text-gray-400 uppercase">
+                        {formatDate(event.date)}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-1">
-                          Condition
-                        </span>
-                        <span
-                          className={`text-sm font-medium px-2 py-1 rounded inline-block capitalize border ${getConditionColor(visit.condition)}`}
-                        >
-                          {visit.condition}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-1">
-                          Status
-                        </span>
-                        <span
-                          className={`text-sm font-medium px-2 py-1 rounded inline-block capitalize border ${getStatusColor(visit.status)}`}
-                        >
-                          {visit.status}
-                        </span>
-                      </div>
-                    </div>
-                    {visit.prescriptions && visit.prescriptions.length > 0 && (
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-2">
-                          Prescriptions
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {visit.prescriptions.map((prescription, pIdx) => (
-                            <span
-                              key={pIdx}
-                              className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200"
-                            >
-                              {prescription}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {visit.notes && visit.notes !== "nothing" && (
-                      <div>
-                        <span className="text-xs font-medium text-gray-500 block mb-1">
-                          Notes
-                        </span>
-                        <p className="text-sm text-[#213448]/80 italic">
-                          {visit.notes}
-                        </p>
-                      </div>
-                    )}
+                    <h4 className="text-sm font-bold text-[#213448] mb-3 pr-24 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#90AB8B]"></div>
+                      Observation
+                    </h4>
+                    <p className="text-sm text-[#213448]/70 leading-relaxed font-medium">
+                      {event.short}
+                    </p>
                   </div>
                 </div>
               ))}
+            </div>
           </div>
         )}
 
         {/* Recommendations Tab */}
         {activeTab === "recommendations" && (
-          <div className="space-y-6">
-            {/* Recommendations */}
-            <div>
-              <h4 className="font-semibold text-[#213448] mb-3 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-[#90AB8B]" />
-                Clinical Recommendations
-              </h4>
-              <div className="space-y-2">
-                {recommendations &&
-                  recommendations.map((rec, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 bg-amber-50 p-3 rounded-lg border border-amber-200"
-                    >
-                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-amber-900 flex-1">{rec}</p>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Follow-up Plan */}
-            {followup_plan && followup_plan.length > 0 && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Recommendations */}
               <div>
-                <h4 className="font-semibold text-[#213448] mb-3 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[#90AB8B]" />
-                  Follow-up Plan
+                <h4 className="text-sm font-black text-[#213448] uppercase tracking-widest mb-4 flex items-center gap-2 text-amber-600">
+                  <Stethoscope className="w-4 h-4" />
+                  Clinical Directives
                 </h4>
-                <div className="space-y-2">
-                  {followup_plan.map((plan, idx) => (
+                <div className="space-y-3">
+                  {recommendations?.map((rec, idx) => (
                     <div
                       key={idx}
-                      className="flex items-start gap-3 bg-green-50 p-3 rounded-lg border border-green-200"
+                      className="flex items-start gap-4 bg-amber-50/50 p-5 rounded-2xl border border-amber-100 group hover:bg-amber-50 transition-colors"
                     >
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-green-900 flex-1">{plan}</p>
+                      <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0 text-amber-600">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      <p className="text-sm text-amber-900 font-semibold leading-relaxed">
+                        {rec}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+
+              {/* Follow-up Plan */}
+              {followup_plan && followup_plan.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-black text-[#213448] uppercase tracking-widest mb-4 flex items-center gap-2 text-emerald-600">
+                    <Calendar className="w-4 h-4" />
+                    Evolutionary Plan
+                  </h4>
+                  <div className="space-y-3">
+                    {followup_plan.map((plan, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-4 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100 hover:bg-emerald-50 transition-colors"
+                      >
+                        <div className="p-2 bg-emerald-100 rounded-lg flex-shrink-0 text-emerald-600">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                        <p className="text-sm text-emerald-900 font-semibold leading-relaxed">
+                          {plan}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Disclaimer */}
+            <div className="mt-8 flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <Info className="w-4 h-4 text-gray-400" />
+              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+                This analysis is generated by AI and should be reviewed by a
+                qualified medical professional before clinical application.
+              </p>
+            </div>
           </div>
         )}
       </div>
