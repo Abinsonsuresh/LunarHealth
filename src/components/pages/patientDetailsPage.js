@@ -645,6 +645,7 @@ export default function PatientDetailsPage({ patientNumber, profile }) {
         open={patientModalOpen}
         mode={patientModalMode}
         initialData={patientModalInitial}
+        userRole={profileState?.role}
         onClose={async () => {
           setPatientModalOpen(false)
           const phone = patientNumber || profileState?.mob_num

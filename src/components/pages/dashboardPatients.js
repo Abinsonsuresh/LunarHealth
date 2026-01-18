@@ -15,7 +15,7 @@ import {
   Search,
 } from "lucide-react"
 
-export default function DashboardPatients() {
+export default function DashboardPatients({ profile }) {
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -416,6 +416,7 @@ export default function DashboardPatients() {
           enableSearch={searchEnabled}
           onPatientSelect={handlePatientSelect}
           initialData={modalMode === "edit" ? selectedPatient : null}
+          userRole={profile?.role}
           onClose={() => setModalOpen(false)}
           onSaved={handleModalSaved}
         />

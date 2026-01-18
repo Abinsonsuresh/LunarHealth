@@ -46,6 +46,7 @@ export default function PatientModal({
   onClose,
   onSaved,
   onPatientSelect,
+  userRole,
 }) {
   // Patient-level form (demographics)
   const [form, setForm] = useState({
@@ -433,8 +434,8 @@ export default function PatientModal({
   const showSuccess = mode !== "edit" && generatedId && qrCodeHtml
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-6">
-      <div className="w-full h-full max-w-4xl bg-white rounded-lg shadow-lg overflow-auto p-6 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-h-[90vh] max-w-4xl bg-white rounded-2xl shadow-2xl overflow-auto p-6 flex flex-col transition-all">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-[#213448]">
             {showSuccess
@@ -531,7 +532,7 @@ export default function PatientModal({
                   Full name *
                 </label>
                 <input
-                  className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
+                  className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.full_name}
                   onChange={(e) => updateForm("full_name", e.target.value)}
                   placeholder={
@@ -551,7 +552,7 @@ export default function PatientModal({
                   Mobile phone *
                 </label>
                 <input
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.mobile_phone}
                   onChange={(e) => updateForm("mobile_phone", e.target.value)}
                   placeholder={
@@ -567,7 +568,7 @@ export default function PatientModal({
                 </label>
                 <input
                   type="number"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#90AB8B] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   value={form.age}
                   onChange={(e) => updateForm("age", e.target.value)}
                   min={0}
@@ -591,200 +592,210 @@ export default function PatientModal({
               </div>
             </div>
 
-            {(() => {
-              const isDataChanged =
-                mode === "edit" &&
-                initialData &&
-                (form.full_name !== initialData.full_name ||
-                  form.mobile_phone !== (initialData.mobile_phone || "") ||
-                  (form.age ? parseInt(form.age, 10) : null) !==
-                    (initialData.age ? parseInt(initialData.age, 10) : null) ||
-                  (form.gender || "") !== (initialData.gender || ""))
+            {/* Update details button (Only for Edit mode, above Visits) */}
+            {mode === "edit" &&
+              (() => {
+                const isDataChanged =
+                  initialData &&
+                  (form.full_name !== initialData.full_name ||
+                    form.mobile_phone !== (initialData.mobile_phone || "") ||
+                    (form.age ? parseInt(form.age, 10) : null) !==
+                      (initialData.age
+                        ? parseInt(initialData.age, 10)
+                        : null) ||
+                    (form.gender || "") !== (initialData.gender || ""))
 
-              const isSubmitDisabled =
-                saving ||
-                (mode === "edit"
-                  ? !isDataChanged
-                  : !form.full_name || !form.mobile_phone)
+                const isSubmitDisabled = saving || !isDataChanged
 
-              return (
-                <div className="mt-4 flex items-center justify-end gap-3 pb-6">
-                  {/* <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition-colors text-[#213448] font-medium"
-                  >
-                    Cancel
-                  </button> */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitDisabled}
-                    className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving
-                      ? "Saving..."
-                      : mode === "edit"
-                        ? "Update patient"
-                        : "Save patient"}
-                  </button>
-                </div>
-              )
-            })()}
+                return (
+                  <div className="mt-4 flex items-center justify-end gap-3 pb-6 border-b border-gray-100">
+                    <button
+                      type="submit"
+                      disabled={isSubmitDisabled}
+                      className="px-4 py-2 rounded-md bg-[#90AB8B] text-white font-medium hover:bg-[#7a9576] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {saving ? "Saving..." : "Update patient"}
+                    </button>
+                  </div>
+                )
+              })()}
 
             {/* Visit inputs */}
-            <div className="mt-0 border-t border-gray-100 pt-4">
-              <h3 className="text-md font-semibold mb-3 text-[#213448]">
-                Visit (initial or new)
-              </h3>
+            {userRole !== "patient" && (
+              <div className="mt-0 border-t border-gray-100 pt-4">
+                <h3 className="text-md font-semibold mb-3 text-[#213448]">
+                  Visit (initial or new)
+                </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Doctor
-                  </label>
-                  <select
-                    value={visitForm.doctor_id}
-                    onChange={(e) =>
-                      updateVisitForm("doctor_id", e.target.value)
-                    }
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  >
-                    <option value="">Select doctor</option>
-                    {doctors.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.full_name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Doctor
+                    </label>
+                    <select
+                      value={visitForm.doctor_id}
+                      onChange={(e) =>
+                        updateVisitForm("doctor_id", e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      disabled={userRole === "attender"}
+                    >
+                      <option value="">Select doctor</option>
+                      {doctors.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Diagnosis
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      value={visitForm.diagnosis}
+                      onChange={(e) =>
+                        updateVisitForm("diagnosis", e.target.value)
+                      }
+                      disabled={userRole === "attender"}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Treatment
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      value={visitForm.treatment}
+                      onChange={(e) =>
+                        updateVisitForm("treatment", e.target.value)
+                      }
+                      disabled={userRole === "attender"}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Prescriptions
+                    </label>
+                    <Select
+                      isMulti
+                      options={medicineOptions}
+                      value={visitForm.prescriptions}
+                      onChange={(selected) =>
+                        updateVisitForm("prescriptions", selected || [])
+                      }
+                      onCreateOption={(inputValue) => {
+                        const newOption = {
+                          value: inputValue,
+                          label: inputValue,
+                        }
+                        updateVisitForm("prescriptions", [
+                          ...visitForm.prescriptions,
+                          newOption,
+                        ])
+                      }}
+                      isClearable
+                      isCreatable
+                      isDisabled={userRole === "attender"}
+                      placeholder="Select or type to add medicines..."
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderColor: "#d1d5db",
+                          borderRadius: "6px",
+                          "&:hover": {
+                            borderColor: "#9ca3af",
+                          },
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected
+                            ? "#90AB8B"
+                            : state.isFocused
+                              ? "#EBF4DD"
+                              : "white",
+                          color: state.isSelected ? "white" : "#213448",
+                        }),
+                        multiValue: (base) => ({
+                          ...base,
+                          backgroundColor: "#EBF4DD",
+                        }),
+                        multiValueLabel: (base) => ({
+                          ...base,
+                          color: "#213448",
+                        }),
+                        multiValueRemove: (base) => ({
+                          ...base,
+                          color: "#90AB8B",
+                          "&:hover": {
+                            backgroundColor: "#90AB8B",
+                            color: "white",
+                          },
+                        }),
+                      }}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Condition
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      value={visitForm.condition}
+                      onChange={(e) =>
+                        updateVisitForm("condition", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1 text-[#213448]">
+                      Notes
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      value={visitForm.notes}
+                      onChange={(e) => updateVisitForm("notes", e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Diagnosis
-                  </label>
-                  <input
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                    value={visitForm.diagnosis}
-                    onChange={(e) =>
-                      updateVisitForm("diagnosis", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Treatment
-                  </label>
-                  <input
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                    value={visitForm.treatment}
-                    onChange={(e) =>
-                      updateVisitForm("treatment", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Prescriptions
-                  </label>
-                  <Select
-                    isMulti
-                    options={medicineOptions}
-                    value={visitForm.prescriptions}
-                    onChange={(selected) =>
-                      updateVisitForm("prescriptions", selected || [])
-                    }
-                    onCreateOption={(inputValue) => {
-                      const newOption = { value: inputValue, label: inputValue }
-                      updateVisitForm("prescriptions", [
-                        ...visitForm.prescriptions,
-                        newOption,
-                      ])
-                    }}
-                    isClearable
-                    isCreatable
-                    placeholder="Select or type to add medicines..."
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                    styles={{
-                      control: (base) => ({
-                        ...base,
-                        borderColor: "#d1d5db",
-                        borderRadius: "6px",
-                        "&:hover": {
-                          borderColor: "#9ca3af",
-                        },
-                      }),
-                      option: (base, state) => ({
-                        ...base,
-                        backgroundColor: state.isSelected
-                          ? "#90AB8B"
-                          : state.isFocused
-                            ? "#EBF4DD"
-                            : "white",
-                        color: state.isSelected ? "white" : "#213448",
-                      }),
-                      multiValue: (base) => ({
-                        ...base,
-                        backgroundColor: "#EBF4DD",
-                      }),
-                      multiValueLabel: (base) => ({
-                        ...base,
-                        color: "#213448",
-                      }),
-                      multiValueRemove: (base) => ({
-                        ...base,
-                        color: "#90AB8B",
-                        "&:hover": {
-                          backgroundColor: "#90AB8B",
-                          color: "white",
-                        },
-                      }),
-                    }}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Condition
-                  </label>
-                  <input
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                    value={visitForm.condition}
-                    onChange={(e) =>
-                      updateVisitForm("condition", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-[#213448]">
-                    Notes
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                    value={visitForm.notes}
-                    onChange={(e) => updateVisitForm("notes", e.target.value)}
-                  />
-                </div>
+                {mode === "edit" && (
+                  <div className="flex items-center justify-end gap-3 mb-4">
+                    <div className="text-sm text-red-600">{visitError}</div>
+                    <button
+                      type="button"
+                      onClick={saveVisit}
+                      disabled={visitSaving}
+                      className="px-4 py-2 rounded-md bg-[#213448] text-white disabled:opacity-50"
+                    >
+                      {visitSaving ? "Saving..." : "Add Visit"}
+                    </button>
+                  </div>
+                )}
               </div>
+            )}
 
-              {mode === "edit" && (
-                <div className="flex items-center justify-end gap-3 mb-4">
-                  <div className="text-sm text-red-600">{visitError}</div>
-                  <button
-                    type="button"
-                    onClick={saveVisit}
-                    disabled={visitSaving}
-                    className="px-4 py-2 rounded-md bg-[#213448] text-white"
-                  >
-                    {visitSaving ? "Saving..." : "Add Visit"}
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Save Button for Add Mode (At Bottom) */}
+            {mode === "add" && (
+              <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+                <button
+                  type="submit"
+                  disabled={saving || !form.full_name || !form.mobile_phone}
+                  className="px-6 py-2.5 rounded-md bg-[#90AB8B] text-white font-bold shadow-lg hover:bg-[#7a9576] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? "Creating..." : "Save Patient Record"}
+                </button>
+              </div>
+            )}
           </form>
         )}
       </div>
